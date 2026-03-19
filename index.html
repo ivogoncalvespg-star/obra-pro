@@ -2,21 +2,22 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Obra Pro">
-    <title>Obra Pro V10</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Obra Pro - V10 Restaurada</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #f8fafc; padding-top: env(safe-area-inset-top); }
-        .tab-active { background: #2563eb !important; color: white !important; }
-        input, select, textarea { font-size: 16px !important; } 
-        .modal-overlay { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px); }
-        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #f8fafc; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .tab-active { background: #2563eb !important; color: white !important; box-shadow: 0 8px 15px rgba(37, 99, 235, 0.2); }
+        input, select, textarea { border: 1px solid #e2e8f0 !important; background: #ffffff !important; padding: 12px 16px !important; border-radius: 14px !important; width: 100% !important; font-size: 16px !important; outline: none !important; color: #1e293b !important; }
+        .split-input { background: #f1f5f9 !important; border: 1px solid #cbd5e1 !important; text-align: right; font-weight: 700; }
+        .modal-overlay { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); }
+        .pie-container { position: relative; width: 180px; height: 180px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
+        .pie-hole { width: 110px; height: 110px; background: white; border-radius: 50%; z-index: 2; position: absolute; }
     </style>
 </head>
 <body class="h-screen overflow-hidden text-slate-900">
@@ -24,201 +25,326 @@
     <!-- LOGIN SCREEN -->
     <div id="login-screen" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-6" style="display: none;">
         <div class="text-center text-white max-w-sm">
-            <div class="bg-blue-600 p-6 rounded-[32px] inline-block mb-6 shadow-2xl"><i data-lucide="wrench" size="48"></i></div>
-            <h2 class="text-4xl font-black mb-2 uppercase italic tracking-tighter text-white">Obra Pro</h2>
-            <p class="text-slate-400 mb-10 text-sm">Controlo de custos das moradias.<br>Ligue à sua Dropbox para começar.</p>
-            <button onclick="doLogin()" class="w-full bg-blue-600 text-white py-5 rounded-[24px] font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Ligar à Dropbox</button>
+            <div class="bg-blue-600 p-4 rounded-[32px] inline-block mb-6 shadow-2xl"><i data-lucide="wrench" size="48"></i></div>
+            <h2 class="text-4xl font-black mb-2 uppercase italic tracking-tighter">Obra Pro</h2>
+            <p class="text-slate-400 mb-10 text-sm">Ligue à sua Dropbox para carregar os dados.</p>
+            <button onclick="doLogin()" class="w-full bg-white text-slate-900 py-5 rounded-[24px] font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Ligar à Dropbox</button>
         </div>
     </div>
 
     <!-- MAIN APP -->
-    <div class="flex h-full safe-bottom">
-        <aside class="fixed bottom-0 left-0 right-0 h-20 bg-slate-900 text-white flex flex-row items-center justify-around px-4 z-50 md:relative md:w-64 md:h-full md:flex-col md:justify-start md:p-6 border-t md:border-t-0 border-slate-800">
-            <div class="hidden md:flex items-center gap-3 mb-10 mt-4">
+    <div class="flex h-full">
+        <aside class="w-20 md:w-64 bg-slate-900 text-white flex flex-col items-center md:items-start p-4 md:p-6 border-r border-slate-800 z-20">
+            <div class="flex items-center gap-3 mb-10 mt-4">
                 <div class="bg-blue-600 p-2 rounded-xl"><i data-lucide="home" size="20"></i></div>
-                <h1 class="text-xl font-black tracking-tighter italic">Obra<span class="text-blue-500">Pro</span></h1>
+                <h1 class="hidden md:block text-xl font-black tracking-tighter italic">Obra<span class="text-blue-500">Pro</span></h1>
             </div>
-            <button onclick="setView('dashboard')" id="btn-dashboard" class="flex flex-col md:flex-row items-center gap-1 md:gap-4 p-2 md:w-full md:p-4 rounded-2xl transition-all font-bold text-slate-400"><i data-lucide="layout-dashboard"></i> <span class="text-[10px] md:text-sm uppercase">Resumo</span></button>
-            <button onclick="setView('entradas')" id="btn-entradas" class="flex flex-col md:flex-row items-center gap-1 md:gap-4 p-2 md:w-full md:p-4 rounded-2xl transition-all font-bold text-slate-400"><i data-lucide="arrow-down-left" class="text-emerald-500"></i> <span class="text-[10px] md:text-sm uppercase">Entradas</span></button>
-            <button onclick="setView('despesas')" id="btn-despesas" class="flex flex-col md:flex-row items-center gap-1 md:gap-4 p-2 md:w-full md:p-4 rounded-2xl transition-all font-bold text-slate-400"><i data-lucide="arrow-up-right" class="text-red-400"></i> <span class="text-[10px] md:text-sm uppercase">Despesas</span></button>
-            <button onclick="setView('review')" id="btn-review" class="flex flex-col md:flex-row items-center gap-1 md:gap-4 p-2 md:w-full md:p-4 rounded-2xl transition-all font-bold text-orange-400 relative"><i data-lucide="list-checks"></i> <span class="text-[10px] md:text-sm uppercase">Revisão</span><span id="review-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full hidden">0</span></button>
+            <nav class="space-y-4 w-full">
+                <button onclick="setView('dashboard')" id="btn-dashboard" class="w-full p-4 rounded-2xl flex items-center justify-center md:justify-start gap-4 transition-all text-slate-400 font-bold hover:bg-slate-800">
+                    <i data-lucide="layout-dashboard"></i> <span class="hidden md:block text-sm">Resumo</span>
+                </button>
+                <button onclick="setView('entradas')" id="btn-entradas" class="w-full p-4 rounded-2xl flex items-center justify-center md:justify-start gap-4 transition-all text-slate-400 font-bold hover:bg-slate-800">
+                    <i data-lucide="arrow-down-left" class="text-emerald-500"></i> <span class="hidden md:block text-sm">Entradas</span>
+                </button>
+                <button onclick="setView('despesas')" id="btn-despesas" class="w-full p-4 rounded-2xl flex items-center justify-center md:justify-start gap-4 transition-all text-slate-400 font-bold hover:bg-slate-800">
+                    <i data-lucide="arrow-up-right" class="text-red-400"></i> <span class="hidden md:block text-sm">Despesas</span>
+                </button>
+                <button onclick="setView('review')" id="btn-review" class="w-full p-4 rounded-2xl flex items-center justify-center md:justify-start gap-4 transition-all text-orange-400 font-bold hover:bg-slate-800 relative">
+                    <i data-lucide="list-checks"></i> <span class="hidden md:block text-sm">Revisão</span>
+                    <span id="review-count" class="absolute top-2 right-2 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full hidden">0</span>
+                </button>
+            </nav>
+            <div id="sync-status" class="mt-auto text-[8px] font-black uppercase text-slate-500 tracking-[0.2em] p-2 text-center w-full">A Ligar...</div>
         </aside>
 
-        <main class="flex-1 flex flex-col overflow-hidden bg-slate-50">
-            <header class="bg-white p-6 pt-12 md:pt-6 border-b flex justify-between items-center shadow-sm z-10">
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white p-6 border-b flex justify-between items-center shadow-sm z-10">
                 <h2 id="view-title" class="text-2xl font-black text-slate-800 uppercase tracking-tighter italic">Dashboard</h2>
                 <div id="header-actions"></div>
             </header>
-            <div id="content" class="p-4 md:p-8 overflow-y-auto h-full pb-32"></div>
+            <div id="content" class="p-4 md:p-8 overflow-y-auto h-full custom-scroll pb-40"></div>
         </main>
     </div>
 
-    <!-- MODAL NOVO REGISTO -->
-    <div id="modal-entry" style="display:none;" class="fixed inset-0 z-[60] modal-overlay flex items-end md:items-center justify-center">
-        <div class="bg-white p-6 rounded-t-[32px] md:rounded-[32px] w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh]">
-            <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 md:hidden"></div>
-            <h3 id="modal-title" class="text-xl font-black text-slate-800 text-center uppercase mb-6 italic">Novo Registo</h3>
+    <!-- MODAL -->
+    <div id="modal-entry" style="display:none;" class="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
+        <div class="bg-white p-6 md:p-8 rounded-[40px] w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div id="type-selector" class="flex gap-2 mb-6">
+                <button onclick="setEntryType('entrada')" id="type-entrada" class="flex-1 p-3 rounded-2xl font-black text-xs uppercase border-2 border-slate-100">Dinheiro Entrou</button>
+                <button onclick="setEntryType('despesa')" id="type-despesa" class="flex-1 p-3 rounded-2xl font-black text-xs uppercase border-2 border-slate-100">Custo Obra</button>
+            </div>
             <div class="space-y-4">
-                <div class="flex gap-2 bg-slate-100 p-1 rounded-2xl">
-                    <button onclick="setEntryType('entrada')" id="type-entrada" class="flex-1 py-3 rounded-xl font-black text-[10px] uppercase transition-all">Entrada</button>
-                    <button onclick="setEntryType('despesa')" id="type-despesa" class="flex-1 py-3 rounded-xl font-black text-[10px] uppercase transition-all">Despesa</button>
-                </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="date" id="form-date" class="bg-slate-50 border p-4 rounded-2xl">
-                    <input type="number" id="form-value" placeholder="Valor €" class="bg-slate-50 border p-4 rounded-2xl font-bold">
+                    <div><label class="text-[10px] font-black text-slate-400 uppercase">Data</label><input type="date" id="form-date"></div>
+                    <div><label class="text-[10px] font-black text-slate-400 uppercase">Valor (€)</label><input type="number" id="form-value" oninput="updateSplitTotals(this.value)"></div>
                 </div>
-                <input type="text" id="form-desc" placeholder="Descrição" class="bg-slate-50 border p-4 rounded-2xl">
-                <div id="box-category"><select id="form-cat" class="bg-slate-50 border p-4 rounded-2xl"></select></div>
-                <div id="split-box" class="bg-blue-50 p-4 rounded-2xl space-y-3">
-                    <p class="text-[9px] font-black text-blue-400 uppercase text-center mb-2">Imputação de Custo</p>
-                    <div class="flex justify-between items-center"><span class="text-[10px] font-black uppercase">Moradia A</span><input type="number" id="split-A" class="w-24 text-right font-bold bg-transparent" placeholder="0"></div>
-                    <div class="flex justify-between items-center"><span class="text-[10px] font-black uppercase text-emerald-600">Moradia B</span><input type="number" id="split-B" class="w-24 text-right font-bold bg-transparent" placeholder="0"></div>
-                    <div class="flex justify-between items-center"><span class="text-[10px] font-black uppercase text-amber-600">Exterior</span><input type="number" id="split-EXT" class="w-24 text-right font-bold bg-transparent" placeholder="0"></div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase">Descrição</label><input type="text" id="form-desc" placeholder="Ex: Pagamento Pedreiro"></div>
+                
+                <!-- Campos apenas para Despesa -->
+                <div id="extra-fields">
+                    <label class="text-[10px] font-black text-slate-400 uppercase">Categoria</label>
+                    <select id="form-cat" class="mb-4"></select>
+                    
+                    <div id="split-box" class="bg-slate-50 p-6 rounded-[32px] border border-slate-200">
+                        <p class="text-[10px] font-black text-slate-500 uppercase mb-4 text-center tracking-widest italic">Imputação de Custo</p>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between gap-4"><span class="text-[10px] font-bold uppercase w-24">Fracção A</span><input type="number" id="split-A" class="split-input" placeholder="0.00" oninput="calcRemaining()"></div>
+                            <div class="flex items-center justify-between gap-4"><span class="text-[10px] font-bold uppercase w-24">Fracção B</span><input type="number" id="split-B" class="split-input" placeholder="0.00" oninput="calcRemaining()"></div>
+                            <div class="flex items-center justify-between gap-4"><span class="text-[10px] font-bold uppercase w-24">Exterior</span><input type="number" id="split-EXT" class="split-input" placeholder="0.00" oninput="calcRemaining()"></div>
+                            <div class="flex justify-between items-center pt-2 border-t border-slate-200"><span class="text-[10px] font-black text-slate-400">Pendente:</span><span id="split-rem" class="font-black text-sm text-blue-600">0.00€</span></div>
+                        </div>
+                    </div>
                 </div>
-                <button onclick="saveEntry()" class="w-full bg-blue-600 text-white py-5 rounded-[24px] font-black uppercase text-xs shadow-xl mt-4">Guardar Dados</button>
-                <button onclick="closeModal()" class="w-full text-slate-400 font-bold py-2 text-[10px] uppercase">Cancelar</button>
+
+                <button onclick="saveEntry()" class="w-full bg-blue-600 text-white p-5 rounded-3xl font-black uppercase text-xs shadow-xl tracking-widest mt-4">Guardar Registo</button>
+                <button onclick="closeModal()" class="w-full text-slate-400 font-bold py-2 uppercase text-[10px] text-center">Cancelar</button>
             </div>
         </div>
     </div>
 
     <script>
-        const CLIENT_ID = 'u4qws8pnz2r2asq'; 
-        const REDIRECT_URI = 'https://ivogoncalvespg-star.github.io/obra-pro/';
+        const CLIENT_ID = 'peevpb9v58or0tn';
+        const REDIRECT_URI = window.location.origin + window.location.pathname;
+        let dbx;
         
-        let db = { entradas: [], despesas: [], categorias: ['Terreno', 'Arquitectura', 'Licenças', 'Construção', 'Acabamentos', 'Extras'] };
+        // --- DADOS RECUPERADOS DO EXCEL ---
+        let db = {
+            entradas: [
+                { id: "e1", data: "2024-09-19", valor: 5000, desc: "CPCV Moradia (Sinal Inicial)" },
+                { id: "e2", data: "2024-01-15", valor: 311355.57, desc: "Capital Próprio - Escritura Líquida" },
+                { id: "e3", data: "2025-11-24", valor: 2570.75, desc: "Reembolso Juros Investimento" }
+            ],
+            despesas: [
+                { id: "d1", cat: "Terreno", data: "2024-11-11", valor: 10000, desc: "CPCV Terreno", split: {A:5000, B:5000, EXT:0} },
+                { id: "d2", cat: "Terreno", data: "2025-01-27", valor: 190000, desc: "Valor Remanescente Terreno", split: {A:95000, B:95000, EXT:0} },
+                { id: "d3", cat: "Licenças", data: "2025-01-27", valor: 12350.00, desc: "IMT Terreno", split: {A:6175, B:6175, EXT:0} },
+                { id: "d4", cat: "Licenças", data: "2025-01-27", valor: 1520.00, desc: "Imposto do Selo", split: {A:760, B:760, EXT:0} },
+                { id: "d5", cat: "Arquitectura", data: "2024-12-05", valor: 2500, desc: "Levantamento Topográfico", split: {A:1250, B:1250, EXT:0} },
+                { id: "d6", cat: "Arquitectura", data: "2025-02-10", valor: 4500, desc: "Projecto Arquitectura (Fase 1)", split: {A:2250, B:2250, EXT:0} }
+            ],
+            categorias: ['Terreno', 'Arquitectura', 'Licenças', 'Construção', 'Acabamentos', 'Gestão']
+        };
+
         let currentView = 'dashboard';
         let tempType = 'despesa';
-        let dbx = null;
+        let accessToken = localStorage.getItem('dbx_token');
 
-        function getAccessTokenFromUrl() {
-            const hash = window.location.hash.substring(1);
-            const params = new URLSearchParams(hash);
-            return params.get('access_token');
+        // --- AUTH & SYNC ---
+        function doLogin() {
+            window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
         }
 
-        async function init() {
-            const token = getAccessTokenFromUrl() || localStorage.getItem('dbx_token');
+        if (window.location.hash) {
+            const params = new URLSearchParams(window.location.hash.substring(1));
+            const token = params.get('access_token');
             if (token) {
                 localStorage.setItem('dbx_token', token);
-                window.location.hash = ""; 
-                dbx = new Dropbox.Dropbox({ accessToken: token });
-                loadData();
-            } else {
-                document.getElementById('login-screen').style.display = 'flex';
+                window.location.hash = '';
+                location.reload();
             }
-            lucide.createIcons();
         }
 
-        function doLogin() {
-            const authUrl = `https://www.dropbox.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
-            window.location.href = authUrl;
+        if (!accessToken) {
+            document.getElementById('login-screen').style.display = 'flex';
+        } else {
+            dbx = new Dropbox.Dropbox({ accessToken: accessToken });
+            initApp();
         }
 
-        async function loadData() {
+        async function initApp() {
             try {
                 const response = await dbx.filesDownload({ path: '/obra_data.json' });
-                const text = await response.result.fileBlob.text();
-                db = JSON.parse(text);
+                const reader = new FileReader();
+                reader.onload = function() {
+                    db = JSON.parse(reader.result);
+                    render();
+                };
+                reader.readAsText(response.result.fileBlob);
+            } catch (e) {
+                await saveToDropbox();
                 render();
-            } catch (e) { saveData(); }
+            }
         }
 
-        async function saveData() {
+        async function saveToDropbox() {
+            document.getElementById('sync-status').innerText = "A Sincronizar...";
             try {
                 await dbx.filesUpload({ path: '/obra_data.json', contents: JSON.stringify(db, null, 2), mode: 'overwrite' });
-                render();
-            } catch (e) { console.error(e); }
+                document.getElementById('sync-status').innerText = "Sincronizado";
+            } catch (err) {
+                document.getElementById('sync-status').innerText = "Erro!";
+            }
         }
 
+        // --- RENDER LOGIC ---
         function setView(v) { currentView = v; render(); }
 
         function render() {
-            document.getElementById('login-screen').style.display = 'none';
             const content = document.getElementById('content');
-            const title = document.getElementById('view-title');
-            document.querySelectorAll('aside button').forEach(b => b.classList.remove('tab-active'));
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('tab-active'));
             document.getElementById('btn-' + currentView).classList.add('tab-active');
 
-            if (currentView === 'dashboard') {
-                title.innerText = "Resumo";
-                const totalE = db.entradas.reduce((a, b) => a + b.valor, 0);
-                const totalD = db.despesas.reduce((a, b) => a + b.valor, 0);
-                content.innerHTML = `
-                    <div class="space-y-4">
-                        <div class="bg-slate-900 text-white p-8 rounded-[32px] shadow-xl border-b-4 border-blue-600">
-                            <p class="text-blue-400 text-[10px] font-black uppercase tracking-widest mb-1 italic">Saldo Disponível</p>
-                            <h3 class="text-4xl font-black italic">${(totalE - totalD).toLocaleString('pt-PT', {minimumFractionDigits:2})}€</h3>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-white p-6 rounded-[32px] border border-slate-200"><p class="text-slate-400 text-[9px] font-black uppercase mb-1">Total Recebido</p><p class="text-xl font-black text-emerald-600">${totalE.toLocaleString('pt-PT')}€</p></div>
-                            <div class="bg-white p-6 rounded-[32px] border border-slate-200"><p class="text-slate-400 text-[9px] font-black uppercase mb-1">Total Pago</p><p class="text-xl font-black text-red-500">${totalD.toLocaleString('pt-PT')}€</p></div>
-                        </div>
-                    </div>`;
-                document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg"><i data-lucide="plus"></i></button>`;
-            }
-            if (currentView === 'entradas') renderList(db.entradas, 'emerald');
-            if (currentView === 'despesas') renderList(db.despesas, 'red');
-            if (currentView === 'review') renderReview();
-            
-            const pending = db.despesas.filter(d => !d.split || (d.split.A + d.split.B + d.split.EXT === 0)).length;
+            const pending = db.despesas.filter(d => !d.split).length;
             const badge = document.getElementById('review-count');
             if(pending > 0) { badge.innerText = pending; badge.style.display = 'block'; } else { badge.style.display = 'none'; }
+
+            if (currentView === 'dashboard') {
+                const totalE = db.entradas.reduce((a, b) => a + b.valor, 0);
+                const totalD = db.despesas.reduce((a, b) => a + b.valor, 0);
+                const saldo = totalE - totalD;
+
+                content.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                        <div class="bg-slate-900 text-white p-10 rounded-[48px] shadow-2xl">
+                            <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2 italic">Saldo em Caixa</p>
+                            <h3 class="text-5xl font-black italic text-emerald-400">${saldo.toLocaleString('pt-PT', {minimumFractionDigits:2})}€</h3>
+                        </div>
+                        <div class="bg-white p-10 rounded-[48px] border border-slate-100 shadow-sm">
+                            <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2 text-right italic">Investimento Realizado</p>
+                            <h3 class="text-5xl font-black italic text-slate-800 text-right">${totalD.toLocaleString('pt-PT', {minimumFractionDigits:2})}€</h3>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        <div class="bg-white p-8 rounded-[40px] shadow-sm">
+                            <h4 class="font-black text-slate-800 uppercase mb-8 italic text-xs tracking-widest underline decoration-blue-500 underline-offset-8">Custos por Fração</h4>
+                            ${renderBar('A', 'Fracção A', 'bg-blue-600')}
+                            ${renderBar('B', 'Fracção B', 'bg-emerald-600')}
+                            ${renderBar('EXT', 'Exterior / Comuns', 'bg-amber-500')}
+                        </div>
+                        <div class="bg-white p-8 rounded-[40px] shadow-sm">
+                            <h4 class="font-black text-slate-800 uppercase mb-8 italic text-xs tracking-widest text-center">Distribuição</h4>
+                            <div class="flex flex-col items-center gap-6">${renderPieChart()}<div class="w-full space-y-2">${renderCategoryLegend()}</div></div>
+                        </div>
+                    </div>`;
+                document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg">+ Novo Registo</button>`;
+            }
+
+            if (currentView === 'review') renderReviewView();
+            if (currentView === 'entradas') renderHistoryList(db.entradas, 'emerald');
+            if (currentView === 'despesas') renderHistoryList(db.despesas, 'red');
             lucide.createIcons();
         }
 
-        function renderList(list, color) {
-            let html = '<div class="space-y-3">';
-            list.sort((a,b) => new Date(b.data) - new Date(a.data)).forEach(item => {
-                html += `<div class="bg-white p-5 rounded-3xl border border-slate-100 flex justify-between items-center shadow-sm">
-                    <div><p class="font-black text-xs uppercase italic">${item.desc}</p><p class="text-[9px] text-slate-400 font-bold uppercase">${item.data} ${item.cat ? '• '+item.cat : ''}</p></div>
-                    <div class="text-right"><p class="font-black italic text-${color}-600">${item.valor.toLocaleString('pt-PT', {minimumFractionDigits:2})}€</p><button onclick="deleteEntry('${item.id}', '${item.cat ? 'despesa' : 'entrada'}')" class="text-[8px] font-black text-slate-300 uppercase">Eliminar</button></div>
-                </div>`;
-            });
-            content.innerHTML = html + '</div>';
-            document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase shadow-lg">Adicionar</button>`;
+        function renderBar(key, label, color) {
+            const total = db.despesas.reduce((acc, d) => acc + (d.split ? (d.split[key] || 0) : 0), 0);
+            const perc = Math.min(100, (total / 300000) * 100);
+            return `<div class="mb-6"><div class="flex justify-between text-[10px] font-black text-slate-400 uppercase mb-2"><span>${label}</span><span>${total.toLocaleString('pt-PT')}€</span></div><div class="w-full bg-slate-100 h-4 rounded-full overflow-hidden"><div class="${color} h-full transition-all duration-1000" style="width: ${perc}%"></div></div></div>`;
         }
 
-        function renderReview() {
-            const list = db.despesas.filter(d => !d.split || (d.split.A + d.split.B + d.split.EXT === 0));
-            if(list.length === 0) { content.innerHTML = `<div class="py-20 text-center opacity-20 font-black uppercase italic">Tudo Imputado!</div>`; return; }
-            let html = '<div class="space-y-6">';
-            list.forEach(item => {
-                html += `<div class="bg-white p-6 rounded-[32px] border border-orange-100 shadow-sm">
-                    <div class="mb-4"><h4 class="font-black text-sm uppercase">${item.desc}</h4><p class="text-[10px] font-bold text-slate-400 uppercase">${item.valor.toFixed(2)}€ • ${item.data}</p></div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <input type="number" id="rev-A-${item.id}" placeholder="A €" class="bg-slate-50 p-3 rounded-xl text-center font-bold text-xs">
-                        <input type="number" id="rev-B-${item.id}" placeholder="B €" class="bg-slate-50 p-3 rounded-xl text-center font-bold text-xs">
-                        <input type="number" id="rev-EXT-${item.id}" placeholder="EXT €" class="bg-slate-50 p-3 rounded-xl text-center font-bold text-xs">
-                    </div>
-                    <button onclick="saveImputation('${item.id}')" class="w-full mt-3 bg-slate-900 text-white py-3 rounded-xl font-black text-[10px] uppercase">Confirmar</button>
-                </div>`;
-            });
-            content.innerHTML = html + '</div>';
+        function renderPieChart() {
+            const totals = db.categorias.map(cat => ({ label: cat, val: db.despesas.filter(d => d.cat === cat).reduce((a, b) => a + b.valor, 0) })).filter(c => c.val > 0);
+            const totalSum = totals.reduce((a, b) => a + b.val, 0);
+            if (totalSum === 0) return `<div class="pie-container bg-slate-50"></div>`;
+            let curr = 0; const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#64748b'];
+            const grad = totals.map((t, i) => { const p = (t.val / totalSum) * 100; const part = `${colors[i % colors.length]} ${curr}% ${(curr + p)}%`; curr += p; return part; }).join(', ');
+            return `<div class="pie-container shadow-xl" style="background: conic-gradient(${grad})"><div class="pie-hole"></div></div>`;
         }
 
-        function openModal() { document.getElementById('modal-entry').style.display = 'flex'; document.getElementById('form-cat').innerHTML = db.categorias.map(c => `<option value="${c}">${c}</option>`).join(''); document.getElementById('form-date').valueAsDate = new Date(); setEntryType('despesa'); }
+        function renderCategoryLegend() {
+            const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#64748b'];
+            return db.categorias.map((cat, i) => {
+                const val = db.despesas.filter(d => d.cat === cat).reduce((a, b) => a + b.valor, 0);
+                return val > 0 ? `<div class="flex justify-between text-xs py-1 border-b border-slate-50"><div><div class="w-2 h-2 inline-block rounded-full mr-2" style="background:${colors[i % colors.length]}"></div><span class="font-bold text-slate-500 uppercase text-[10px]">${cat}</span></div><span class="font-black italic">${val.toLocaleString('pt-PT')}€</span></div>` : '';
+            }).join('');
+        }
+
+        function renderHistoryList(list, theme) {
+            const grouped = list.sort((a,b) => new Date(b.data) - new Date(a.data)).reduce((acc, item) => { const year = new Date(item.data).getFullYear(); if (!acc[year]) acc[year] = []; acc[year].push(item); return acc; }, {});
+            let html = `<div class="max-w-4xl mx-auto space-y-4">`;
+            for (const year in grouped) {
+                html += `<div class="pt-6 pb-2 text-2xl font-black text-slate-300 italic">${year}</div>`;
+                html += grouped[year].map(m => `<div class="bg-white p-5 rounded-[24px] border border-slate-50 flex justify-between items-center shadow-sm">
+                    <div><p class="font-black uppercase text-sm italic">${m.desc}</p><p class="text-[9px] font-bold text-slate-400 uppercase">${m.data} ${m.cat ? '• '+m.cat : ''}</p></div>
+                    <div class="flex items-center gap-4"><p class="font-black italic ${theme==='emerald'?'text-emerald-600':'text-slate-800'}">${m.valor.toLocaleString('pt-PT')}€</p>
+                    <button onclick="deleteEntry('${m.id}', '${m.cat ? 'despesa' : 'entrada'}')" class="text-slate-200 hover:text-red-500 transition-colors"><i data-lucide="trash-2" size="16"></i></button></div></div>`).join('');
+            }
+            document.getElementById('content').innerHTML = html + `</div>`;
+        }
+
+        function renderReviewView() {
+            const list = db.despesas.filter(d => !d.split);
+            document.getElementById('content').innerHTML = `<div class="max-w-xl mx-auto space-y-6">
+                ${list.length === 0 ? '<div class="text-center py-20 opacity-30 font-black italic">TUDO REVISIONADO!</div>' : list.map(item => `
+                    <div class="bg-white p-8 rounded-[40px] shadow-lg border-2 border-orange-100">
+                        <h4 class="font-black text-lg uppercase italic mb-1">${item.desc}</h4>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase mb-6">${item.data} • ${item.valor.toFixed(2)}€</p>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-3 gap-2">
+                                <input type="number" id="rev-A-${item.id}" placeholder="Fraç. A" class="split-input">
+                                <input type="number" id="rev-B-${item.id}" placeholder="Fraç. B" class="split-input">
+                                <input type="number" id="rev-EXT-${item.id}" placeholder="Ext." class="split-input">
+                            </div>
+                            <button onclick="saveImputation('${item.id}')" class="w-full bg-slate-900 text-white p-4 rounded-2xl font-black uppercase text-xs">Confirmar</button>
+                        </div></div>`).join('')}</div>`;
+        }
+
+        // --- MODAL & LOGIC ---
+        function openModal() { 
+            document.getElementById('modal-entry').style.display = 'flex'; 
+            document.getElementById('form-cat').innerHTML = db.categorias.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('form-date').valueAsDate = new Date();
+            setEntryType('despesa');
+        }
+
         function closeModal() { document.getElementById('modal-entry').style.display = 'none'; }
-        function setEntryType(t) { tempType = t; document.getElementById('type-entrada').className = t === 'entrada' ? 'flex-1 py-3 rounded-xl font-black text-[10px] uppercase bg-emerald-500 text-white shadow-lg' : 'flex-1 py-3 rounded-xl font-black text-[10px] uppercase text-slate-400'; document.getElementById('type-despesa').className = t === 'despesa' ? 'flex-1 py-3 rounded-xl font-black text-[10px] uppercase bg-blue-600 text-white shadow-lg' : 'flex-1 py-3 rounded-xl font-black text-[10px] uppercase text-slate-400'; document.getElementById('split-box').style.display = t === 'despesa' ? 'block' : 'none'; document.getElementById('box-category').style.display = t === 'despesa' ? 'block' : 'none'; }
+
+        function setEntryType(t) { 
+            tempType = t; 
+            document.getElementById('type-entrada').classList.toggle('tab-active', t === 'entrada');
+            document.getElementById('type-despesa').classList.toggle('tab-active', t === 'despesa');
+            // Esconder campos de categoria e imputação se for Entrada
+            document.getElementById('extra-fields').style.display = (t === 'despesa') ? 'block' : 'none';
+        }
+
+        function updateSplitTotals(total) { document.getElementById('split-rem').innerText = parseFloat(total || 0).toFixed(2) + "€"; }
+        
+        function calcRemaining() { 
+            const total = parseFloat(document.getElementById('form-value').value || 0);
+            const a = parseFloat(document.getElementById('split-A').value || 0), b = parseFloat(document.getElementById('split-B').value || 0), ext = parseFloat(document.getElementById('split-EXT').value || 0);
+            const rem = total - (a + b + ext);
+            const el = document.getElementById('split-rem');
+            el.innerText = rem.toFixed(2) + "€";
+            el.className = Math.abs(rem) < 0.01 ? "text-emerald-500 font-black text-sm" : "text-red-500 font-black text-sm";
+        }
 
         async function saveEntry() {
-            const val = parseFloat(document.getElementById('form-value').value);
-            const desc = document.getElementById('form-desc').value;
-            if(!val || !desc) return alert("Erro nos dados!");
-            const entry = { id: Date.now().toString(), data: document.getElementById('form-date').value, valor: val, desc, cat: tempType === 'despesa' ? document.getElementById('form-cat').value : null, split: tempType === 'despesa' ? { A: parseFloat(document.getElementById('split-A').value || 0), B: parseFloat(document.getElementById('split-B').value || 0), EXT: parseFloat(document.getElementById('split-EXT').value || 0) } : null };
-            if (tempType === 'entrada') db.entradas.push(entry); else db.despesas.push(entry);
-            closeModal(); await saveData();
+            const val = parseFloat(document.getElementById('form-value').value), desc = document.getElementById('form-desc').value, date = document.getElementById('form-date').value;
+            if(!val || !desc || !date) return alert("Preencha os campos obrigatórios!");
+
+            let entry = { id: Date.now().toString(), data: date, valor: val, desc: desc };
+
+            if(tempType === 'despesa') {
+                const split = { A: parseFloat(document.getElementById('split-A').value || 0), B: parseFloat(document.getElementById('split-B').value || 0), EXT: parseFloat(document.getElementById('split-EXT').value || 0) };
+                if(Math.abs((split.A + split.B + split.EXT) - val) > 0.01) return alert("A soma das frações deve ser igual ao valor total!");
+                entry.cat = document.getElementById('form-cat').value;
+                entry.split = split;
+                db.despesas.push(entry);
+            } else {
+                db.entradas.push(entry);
+            }
+
+            closeModal();
+            await saveToDropbox();
+            render();
         }
 
         async function saveImputation(id) {
             const item = db.despesas.find(d => d.id === id);
             const a = parseFloat(document.getElementById(`rev-A-${id}`).value || 0), b = parseFloat(document.getElementById(`rev-B-${id}`).value || 0), ext = parseFloat(document.getElementById(`rev-EXT-${id}`).value || 0);
-            if(Math.abs((a+b+ext)-item.valor) > 0.1) return alert("Soma incorreta!");
+            if(Math.abs((a+b+ext) - item.valor) > 0.01) return alert("Soma incorreta!");
             item.split = { A: a, B: b, EXT: ext };
-            await saveData();
+            await saveToDropbox(); render();
         }
 
-        async function deleteEntry(id, type) { if(confirm("Eliminar?")) { if(type === 'entrada') db.entradas = db.entradas.filter(e => e.id !== id); else db.despesas = db.despesas.filter(d => d.id !== id); await saveData(); } }
-        init();
+        async function deleteEntry(id, type) { 
+            if(confirm('Eliminar este registo permanentemente?')) { 
+                if(type==='entrada') db.entradas = db.entradas.filter(e=>e.id!==id); 
+                else db.despesas = db.despesas.filter(d=>d.id!==id); 
+                await saveToDropbox(); render(); 
+            } 
+        }
+
+        lucide.createIcons();
     </script>
 </body>
 </html>
