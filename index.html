@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Obra Pro - V10 Restaurada</title>
+    <title>Obra Pro - V11 (Edição Total)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
@@ -27,7 +27,7 @@
         <div class="text-center text-white max-w-sm">
             <div class="bg-blue-600 p-4 rounded-[32px] inline-block mb-6 shadow-2xl"><i data-lucide="wrench" size="48"></i></div>
             <h2 class="text-4xl font-black mb-2 uppercase italic tracking-tighter">Obra Pro</h2>
-            <p class="text-slate-400 mb-10 text-sm">Ligue à sua Dropbox para carregar os dados.</p>
+            <p class="text-slate-400 mb-10 text-sm">Ligue à sua Dropbox para gerir os dados.</p>
             <button onclick="doLogin()" class="w-full bg-white text-slate-900 py-5 rounded-[24px] font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Ligar à Dropbox</button>
         </div>
     </div>
@@ -54,7 +54,7 @@
                     <span id="review-count" class="absolute top-2 right-2 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full hidden">0</span>
                 </button>
             </nav>
-            <div id="sync-status" class="mt-auto text-[8px] font-black uppercase text-slate-500 tracking-[0.2em] p-2 text-center w-full">A Ligar...</div>
+            <div id="sync-status" class="mt-auto text-[8px] font-black uppercase text-slate-500 tracking-[0.2em] p-2 text-center w-full">Dropbox</div>
         </aside>
 
         <main class="flex-1 flex flex-col overflow-hidden">
@@ -66,37 +66,40 @@
         </main>
     </div>
 
-    <!-- MODAL -->
+    <!-- MODAL (Novo/Editar) -->
     <div id="modal-entry" style="display:none;" class="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
         <div class="bg-white p-6 md:p-8 rounded-[40px] w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh]">
+            <h3 id="modal-title" class="text-center font-black uppercase italic text-blue-600 mb-6 tracking-tighter">Registo</h3>
+            
             <div id="type-selector" class="flex gap-2 mb-6">
                 <button onclick="setEntryType('entrada')" id="type-entrada" class="flex-1 p-3 rounded-2xl font-black text-xs uppercase border-2 border-slate-100">Dinheiro Entrou</button>
                 <button onclick="setEntryType('despesa')" id="type-despesa" class="flex-1 p-3 rounded-2xl font-black text-xs uppercase border-2 border-slate-100">Custo Obra</button>
             </div>
+
             <div class="space-y-4">
+                <input type="hidden" id="edit-id">
                 <div class="grid grid-cols-2 gap-4">
                     <div><label class="text-[10px] font-black text-slate-400 uppercase">Data</label><input type="date" id="form-date"></div>
                     <div><label class="text-[10px] font-black text-slate-400 uppercase">Valor (€)</label><input type="number" id="form-value" oninput="updateSplitTotals(this.value)"></div>
                 </div>
-                <div><label class="text-[10px] font-black text-slate-400 uppercase">Descrição</label><input type="text" id="form-desc" placeholder="Ex: Pagamento Pedreiro"></div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase">Descrição</label><input type="text" id="form-desc"></div>
                 
-                <!-- Campos apenas para Despesa -->
                 <div id="extra-fields">
                     <label class="text-[10px] font-black text-slate-400 uppercase">Categoria</label>
                     <select id="form-cat" class="mb-4"></select>
                     
                     <div id="split-box" class="bg-slate-50 p-6 rounded-[32px] border border-slate-200">
-                        <p class="text-[10px] font-black text-slate-500 uppercase mb-4 text-center tracking-widest italic">Imputação de Custo</p>
+                        <p class="text-[10px] font-black text-slate-500 uppercase mb-4 text-center tracking-widest italic">Imputação</p>
                         <div class="space-y-3">
-                            <div class="flex items-center justify-between gap-4"><span class="text-[10px] font-bold uppercase w-24">Fracção A</span><input type="number" id="split-A" class="split-input" placeholder="0.00" oninput="calcRemaining()"></div>
-                            <div class="flex items-center justify-between gap-4"><span class="text-[10px] font-bold uppercase w-24">Fracção B</span><input type="number" id="split-B" class="split-input" placeholder="0.00" oninput="calcRemaining()"></div>
-                            <div class="flex items-center justify-between gap-4"><span class="text-[10px] font-bold uppercase w-24">Exterior</span><input type="number" id="split-EXT" class="split-input" placeholder="0.00" oninput="calcRemaining()"></div>
+                            <div class="flex items-center justify-between gap-4"><span class="text-[10px] font-bold uppercase w-24">Fracção A</span><input type="number" id="split-A" class="split-input" oninput="calcRemaining()"></div>
+                            <div class="flex items-center justify-between gap-4"><span class="text-[10px] font-bold uppercase w-24 text-emerald-600">Fracção B</span><input type="number" id="split-B" class="split-input" oninput="calcRemaining()"></div>
+                            <div class="flex items-center justify-between gap-4"><span class="text-[10px] font-bold uppercase w-24 text-amber-500">Exterior</span><input type="number" id="split-EXT" class="split-input" oninput="calcRemaining()"></div>
                             <div class="flex justify-between items-center pt-2 border-t border-slate-200"><span class="text-[10px] font-black text-slate-400">Pendente:</span><span id="split-rem" class="font-black text-sm text-blue-600">0.00€</span></div>
                         </div>
                     </div>
                 </div>
 
-                <button onclick="saveEntry()" class="w-full bg-blue-600 text-white p-5 rounded-3xl font-black uppercase text-xs shadow-xl tracking-widest mt-4">Guardar Registo</button>
+                <button onclick="saveEntry()" class="w-full bg-blue-600 text-white p-5 rounded-3xl font-black uppercase text-xs shadow-xl tracking-widest mt-4">Guardar e Sincronizar</button>
                 <button onclick="closeModal()" class="w-full text-slate-400 font-bold py-2 uppercase text-[10px] text-center">Cancelar</button>
             </div>
         </div>
@@ -107,22 +110,38 @@
         const REDIRECT_URI = window.location.origin + window.location.pathname;
         let dbx;
         
-        // --- DADOS RECUPERADOS DO EXCEL ---
+        // --- DADOS ATUALIZADOS DO JSON ---
         let db = {
             entradas: [
-                { id: "e1", data: "2024-09-19", valor: 5000, desc: "CPCV Moradia (Sinal Inicial)" },
-                { id: "e2", data: "2024-01-15", valor: 311355.57, desc: "Capital Próprio - Escritura Líquida" },
-                { id: "e3", data: "2025-11-24", valor: 2570.75, desc: "Reembolso Juros Investimento" }
+                {"id": "1773934639289", "data": "2025-11-24", "valor": 2570.75, "desc": "Juros ganhos com Neowintech"},
+                {"id": "1773934593649", "data": "2025-11-20", "valor": 92.25, "desc": "Conta pessoal"},
+                {"id": "1773934573550", "data": "2025-11-11", "valor": 230, "desc": "Conta pessoal"},
+                {"id": "1773934552044", "data": "2025-10-29", "valor": 123, "desc": "Conta pessoal"},
+                {"id": "1773934741128", "data": "2025-10-10", "valor": 14.9, "desc": "Conta pessoal"},
+                {"id": "1773934507561", "data": "2025-04-23", "valor": 230, "desc": "Conta pessoal"},
+                {"id": "1773934480950", "data": "2025-04-11", "valor": 2000, "desc": "Dinheiro País Miriam"},
+                {"id": "1773934464788", "data": "2025-01-20", "valor": 2000, "desc": "Dinheiro País Miriam"},
+                {"id": "1773934704651", "data": "2025-01-15", "valor": 311355.57, "desc": "Escritura"},
+                {"id": "1773934358167", "data": "2024-09-23", "valor": 5000, "desc": "Contrato promessa compra e venda "},
+                {"id": "1773934310014", "data": "2024-09-20", "valor": 5000, "desc": "Contrato promessa compra e venda "},
+                {"id": "1773934326659", "data": "2024-09-20", "valor": 5000, "desc": "Contrato promessa compra e venda "},
+                {"id": "1773934290627", "data": "2024-09-19", "valor": 5000, "desc": "Contrato promessa compra e venda "}
             ],
             despesas: [
-                { id: "d1", cat: "Terreno", data: "2024-11-11", valor: 10000, desc: "CPCV Terreno", split: {A:5000, B:5000, EXT:0} },
-                { id: "d2", cat: "Terreno", data: "2025-01-27", valor: 190000, desc: "Valor Remanescente Terreno", split: {A:95000, B:95000, EXT:0} },
-                { id: "d3", cat: "Licenças", data: "2025-01-27", valor: 12350.00, desc: "IMT Terreno", split: {A:6175, B:6175, EXT:0} },
-                { id: "d4", cat: "Licenças", data: "2025-01-27", valor: 1520.00, desc: "Imposto do Selo", split: {A:760, B:760, EXT:0} },
-                { id: "d5", cat: "Arquitectura", data: "2024-12-05", valor: 2500, desc: "Levantamento Topográfico", split: {A:1250, B:1250, EXT:0} },
-                { id: "d6", cat: "Arquitectura", data: "2025-02-10", valor: 4500, desc: "Projecto Arquitectura (Fase 1)", split: {A:2250, B:2250, EXT:0} }
+                {"id": "1773934919047", "data": "2025-01-27", "valor": 190000, "desc": "Escritura terreno", "cat": "Terreno", "split": {"A": 0, "B": 190000, "EXT": 0}},
+                {"id": "1773934964645", "data": "2025-01-27", "valor": 13650, "desc": "IMT", "cat": "Terreno", "split": {"A": 0, "B": 13650, "EXT": 0}},
+                {"id": "1773935011183", "data": "2025-01-27", "valor": 1680, "desc": "Imposto selo", "cat": "Terreno", "split": {"A": 0, "B": 1680, "EXT": 0}},
+                {"id": "1773935057591", "data": "2025-01-27", "valor": 250, "desc": "Certidão ", "cat": "Terreno", "split": {"A": 0, "B": 250, "EXT": 0}},
+                {"id": "1773935109229", "data": "2025-01-27", "valor": 536.6, "desc": "Solicitadora", "cat": "Terreno", "split": {"A": 0, "B": 536.6, "EXT": 0}},
+                {"id": "1773934878383", "data": "2025-01-20", "valor": 20.85, "desc": "Emissão cheque bancario", "cat": "Terreno", "split": {"A": 0, "B": 20.85, "EXT": 0}},
+                {"id": "1773935210857", "data": "2025-01-20", "valor": 2000, "desc": "1 Prestação ", "cat": "Arquitectura", "split": {"A": 2000, "B": 0, "EXT": 0}},
+                {"id": "1773935167352", "data": "2024-12-30", "valor": 2460, "desc": "Fatura 95", "cat": "Arquitectura", "split": {"A": 0, "B": 2460, "EXT": 0}},
+                {"id": "1773934832930", "data": "2024-11-12", "valor": 10000, "desc": "Contrato promessa compra e venda", "cat": "Terreno", "split": {"A": 0, "B": 10000, "EXT": 0}},
+                {"id": "1773934810549", "data": "2024-11-11", "valor": 10000, "desc": "Contrato promessa compra e venda", "cat": "Terreno", "split": {"A": 0, "B": 10000, "EXT": 0}},
+                {"id": "1773935247381", "data": "2024-04-17", "valor": 2460, "desc": "Fatura 155", "cat": "Arquitectura", "split": {"A": 2460, "B": 0, "EXT": 0}},
+                {"id": "1773935289107", "data": "2025-04-11", "valor": 2000, "desc": "2 Prestação ", "cat": "Arquitectura", "split": {"A": 2000, "B": 0, "EXT": 0}}
             ],
-            categorias: ['Terreno', 'Arquitectura', 'Licenças', 'Construção', 'Acabamentos', 'Gestão']
+            categorias: ["Terreno", "Arquitectura", "Licenças", "Construção", "Acabamentos", "Extras"]
         };
 
         let currentView = 'dashboard';
@@ -130,53 +149,32 @@
         let accessToken = localStorage.getItem('dbx_token');
 
         // --- AUTH & SYNC ---
-        function doLogin() {
-            window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
-        }
-
+        function doLogin() { window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`; }
         if (window.location.hash) {
             const params = new URLSearchParams(window.location.hash.substring(1));
             const token = params.get('access_token');
-            if (token) {
-                localStorage.setItem('dbx_token', token);
-                window.location.hash = '';
-                location.reload();
-            }
+            if (token) { localStorage.setItem('dbx_token', token); window.location.hash = ''; location.reload(); }
         }
 
-        if (!accessToken) {
-            document.getElementById('login-screen').style.display = 'flex';
-        } else {
-            dbx = new Dropbox.Dropbox({ accessToken: accessToken });
-            initApp();
-        }
+        if (!accessToken) { document.getElementById('login-screen').style.display = 'flex'; }
+        else { dbx = new Dropbox.Dropbox({ accessToken: accessToken }); initApp(); }
 
         async function initApp() {
             try {
                 const response = await dbx.filesDownload({ path: '/obra_data.json' });
                 const reader = new FileReader();
-                reader.onload = function() {
-                    db = JSON.parse(reader.result);
-                    render();
-                };
+                reader.onload = function() { db = JSON.parse(reader.result); render(); };
                 reader.readAsText(response.result.fileBlob);
-            } catch (e) {
-                await saveToDropbox();
-                render();
-            }
+            } catch (e) { await saveToDropbox(); render(); }
         }
 
         async function saveToDropbox() {
-            document.getElementById('sync-status').innerText = "A Sincronizar...";
-            try {
-                await dbx.filesUpload({ path: '/obra_data.json', contents: JSON.stringify(db, null, 2), mode: 'overwrite' });
-                document.getElementById('sync-status').innerText = "Sincronizado";
-            } catch (err) {
-                document.getElementById('sync-status').innerText = "Erro!";
-            }
+            document.getElementById('sync-status').innerText = "Sync...";
+            try { await dbx.filesUpload({ path: '/obra_data.json', contents: JSON.stringify(db, null, 2), mode: 'overwrite' }); document.getElementById('sync-status').innerText = "Ok"; }
+            catch (err) { document.getElementById('sync-status').innerText = "Erro"; }
         }
 
-        // --- RENDER LOGIC ---
+        // --- RENDER ---
         function setView(v) { currentView = v; render(); }
 
         function render() {
@@ -196,27 +194,27 @@
                 content.innerHTML = `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
                         <div class="bg-slate-900 text-white p-10 rounded-[48px] shadow-2xl">
-                            <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2 italic">Saldo em Caixa</p>
-                            <h3 class="text-5xl font-black italic text-emerald-400">${saldo.toLocaleString('pt-PT', {minimumFractionDigits:2})}€</h3>
+                            <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2 italic">Saldo Disponível</p>
+                            <h3 class="text-5xl font-black italic text-blue-400">${saldo.toLocaleString('pt-PT', {minimumFractionDigits:2})}€</h3>
                         </div>
                         <div class="bg-white p-10 rounded-[48px] border border-slate-100 shadow-sm">
-                            <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2 text-right italic">Investimento Realizado</p>
+                            <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2 text-right italic">Total de Investimento</p>
                             <h3 class="text-5xl font-black italic text-slate-800 text-right">${totalD.toLocaleString('pt-PT', {minimumFractionDigits:2})}€</h3>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                         <div class="bg-white p-8 rounded-[40px] shadow-sm">
-                            <h4 class="font-black text-slate-800 uppercase mb-8 italic text-xs tracking-widest underline decoration-blue-500 underline-offset-8">Custos por Fração</h4>
+                            <h4 class="font-black text-slate-800 uppercase mb-8 italic text-xs tracking-widest underline decoration-blue-500">Distribuição por Zona</h4>
                             ${renderBar('A', 'Fracção A', 'bg-blue-600')}
                             ${renderBar('B', 'Fracção B', 'bg-emerald-600')}
-                            ${renderBar('EXT', 'Exterior / Comuns', 'bg-amber-500')}
+                            ${renderBar('EXT', 'Arranjos Exteriores', 'bg-amber-500')}
                         </div>
-                        <div class="bg-white p-8 rounded-[40px] shadow-sm">
-                            <h4 class="font-black text-slate-800 uppercase mb-8 italic text-xs tracking-widest text-center">Distribuição</h4>
-                            <div class="flex flex-col items-center gap-6">${renderPieChart()}<div class="w-full space-y-2">${renderCategoryLegend()}</div></div>
+                        <div class="bg-white p-8 rounded-[40px] shadow-sm text-center">
+                            <h4 class="font-black text-slate-800 uppercase mb-8 italic text-xs tracking-widest">Gastos por Categoria</h4>
+                            <div class="flex flex-col items-center gap-6">${renderPieChart()}<div class="w-full text-left space-y-2">${renderCategoryLegend()}</div></div>
                         </div>
                     </div>`;
-                document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg">+ Novo Registo</button>`;
+                document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg">+ Novo</button>`;
             }
 
             if (currentView === 'review') renderReviewView();
@@ -227,37 +225,40 @@
 
         function renderBar(key, label, color) {
             const total = db.despesas.reduce((acc, d) => acc + (d.split ? (d.split[key] || 0) : 0), 0);
-            const perc = Math.min(100, (total / 300000) * 100);
-            return `<div class="mb-6"><div class="flex justify-between text-[10px] font-black text-slate-400 uppercase mb-2"><span>${label}</span><span>${total.toLocaleString('pt-PT')}€</span></div><div class="w-full bg-slate-100 h-4 rounded-full overflow-hidden"><div class="${color} h-full transition-all duration-1000" style="width: ${perc}%"></div></div></div>`;
+            return `<div class="mb-6"><div class="flex justify-between text-[10px] font-black text-slate-400 uppercase mb-2"><span>${label}</span><span>${total.toLocaleString('pt-PT')}€</span></div><div class="w-full bg-slate-100 h-4 rounded-full overflow-hidden"><div class="${color} h-full" style="width: ${Math.min(100, (total/300000)*100)}%"></div></div></div>`;
         }
 
         function renderPieChart() {
             const totals = db.categorias.map(cat => ({ label: cat, val: db.despesas.filter(d => d.cat === cat).reduce((a, b) => a + b.valor, 0) })).filter(c => c.val > 0);
             const totalSum = totals.reduce((a, b) => a + b.val, 0);
             if (totalSum === 0) return `<div class="pie-container bg-slate-50"></div>`;
-            let curr = 0; const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#64748b'];
+            let curr = 0; const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
             const grad = totals.map((t, i) => { const p = (t.val / totalSum) * 100; const part = `${colors[i % colors.length]} ${curr}% ${(curr + p)}%`; curr += p; return part; }).join(', ');
-            return `<div class="pie-container shadow-xl" style="background: conic-gradient(${grad})"><div class="pie-hole"></div></div>`;
+            return `<div class="pie-container" style="background: conic-gradient(${grad})"><div class="pie-hole"></div></div>`;
         }
 
         function renderCategoryLegend() {
-            const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#64748b'];
+            const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
             return db.categorias.map((cat, i) => {
                 const val = db.despesas.filter(d => d.cat === cat).reduce((a, b) => a + b.valor, 0);
-                return val > 0 ? `<div class="flex justify-between text-xs py-1 border-b border-slate-50"><div><div class="w-2 h-2 inline-block rounded-full mr-2" style="background:${colors[i % colors.length]}"></div><span class="font-bold text-slate-500 uppercase text-[10px]">${cat}</span></div><span class="font-black italic">${val.toLocaleString('pt-PT')}€</span></div>` : '';
+                return val > 0 ? `<div class="flex justify-between text-xs border-b border-slate-50 py-1"><div><div class="w-2 h-2 inline-block rounded-full mr-2" style="background:${colors[i % colors.length]}"></div><span class="font-bold text-slate-500 uppercase text-[10px]">${cat}</span></div><span class="font-black">${val.toLocaleString('pt-PT')}€</span></div>` : '';
             }).join('');
         }
 
         function renderHistoryList(list, theme) {
-            const grouped = list.sort((a,b) => new Date(b.data) - new Date(a.data)).reduce((acc, item) => { const year = new Date(item.data).getFullYear(); if (!acc[year]) acc[year] = []; acc[year].push(item); return acc; }, {});
-            let html = `<div class="max-w-4xl mx-auto space-y-4">`;
-            for (const year in grouped) {
-                html += `<div class="pt-6 pb-2 text-2xl font-black text-slate-300 italic">${year}</div>`;
-                html += grouped[year].map(m => `<div class="bg-white p-5 rounded-[24px] border border-slate-50 flex justify-between items-center shadow-sm">
+            const sorted = list.sort((a,b) => new Date(b.data) - new Date(a.data));
+            let html = `<div class="max-w-4xl mx-auto space-y-3">`;
+            sorted.forEach(m => {
+                html += `<div class="bg-white p-5 rounded-[24px] border border-slate-50 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
                     <div><p class="font-black uppercase text-sm italic">${m.desc}</p><p class="text-[9px] font-bold text-slate-400 uppercase">${m.data} ${m.cat ? '• '+m.cat : ''}</p></div>
-                    <div class="flex items-center gap-4"><p class="font-black italic ${theme==='emerald'?'text-emerald-600':'text-slate-800'}">${m.valor.toLocaleString('pt-PT')}€</p>
-                    <button onclick="deleteEntry('${m.id}', '${m.cat ? 'despesa' : 'entrada'}')" class="text-slate-200 hover:text-red-500 transition-colors"><i data-lucide="trash-2" size="16"></i></button></div></div>`).join('');
-            }
+                    <div class="flex items-center gap-6">
+                        <p class="font-black italic text-md ${theme==='emerald'?'text-emerald-600':'text-slate-800'}">${m.valor.toLocaleString('pt-PT')}€</p>
+                        <div class="flex gap-2">
+                            <button onclick="editEntry('${m.id}', '${m.cat?'despesa':'entrada'}')" class="text-slate-300 hover:text-blue-500"><i data-lucide="edit-3" size="18"></i></button>
+                            <button onclick="deleteEntry('${m.id}', '${m.cat?'despesa':'entrada'}')" class="text-slate-200 hover:text-red-500"><i data-lucide="trash-2" size="18"></i></button>
+                        </div>
+                    </div></div>`;
+            });
             document.getElementById('content').innerHTML = html + `</div>`;
         }
 
@@ -270,20 +271,49 @@
                         <p class="text-[10px] font-bold text-slate-400 uppercase mb-6">${item.data} • ${item.valor.toFixed(2)}€</p>
                         <div class="space-y-4">
                             <div class="grid grid-cols-3 gap-2">
-                                <input type="number" id="rev-A-${item.id}" placeholder="Fraç. A" class="split-input">
-                                <input type="number" id="rev-B-${item.id}" placeholder="Fraç. B" class="split-input">
+                                <input type="number" id="rev-A-${item.id}" placeholder="Frac. A" class="split-input">
+                                <input type="number" id="rev-B-${item.id}" placeholder="Frac. B" class="split-input">
                                 <input type="number" id="rev-EXT-${item.id}" placeholder="Ext." class="split-input">
                             </div>
-                            <button onclick="saveImputation('${item.id}')" class="w-full bg-slate-900 text-white p-4 rounded-2xl font-black uppercase text-xs">Confirmar</button>
+                            <button onclick="saveImputation('${item.id}')" class="w-full bg-slate-900 text-white p-4 rounded-2xl font-black uppercase text-xs">Confirmar Divisão</button>
                         </div></div>`).join('')}</div>`;
         }
 
-        // --- MODAL & LOGIC ---
-        function openModal() { 
-            document.getElementById('modal-entry').style.display = 'flex'; 
+        // --- ENGINE ---
+        function openModal() {
+            document.getElementById('modal-entry').style.display = 'flex';
+            document.getElementById('modal-title').innerText = "Novo Registo";
+            document.getElementById('edit-id').value = "";
             document.getElementById('form-cat').innerHTML = db.categorias.map(c => `<option value="${c}">${c}</option>`).join('');
+            ['form-value','form-desc','split-A','split-B','split-EXT'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('form-date').valueAsDate = new Date();
             setEntryType('despesa');
+        }
+
+        function editEntry(id, type) {
+            const list = (type === 'entrada') ? db.entradas : db.despesas;
+            const item = list.find(x => x.id === id);
+            if(!item) return;
+
+            document.getElementById('modal-entry').style.display = 'flex';
+            document.getElementById('modal-title').innerText = "Editar Registo";
+            document.getElementById('edit-id').value = id;
+            document.getElementById('form-date').value = item.data;
+            document.getElementById('form-value').value = item.valor;
+            document.getElementById('form-desc').value = item.desc;
+            
+            setEntryType(type);
+            
+            if(type === 'despesa') {
+                document.getElementById('form-cat').innerHTML = db.categorias.map(c => `<option value="${c}" ${c===item.cat?'selected':''}>${c}</option>`).join('');
+                if(item.split) {
+                    document.getElementById('split-A').value = item.split.A;
+                    document.getElementById('split-B').value = item.split.B;
+                    document.getElementById('split-EXT').value = item.split.EXT;
+                }
+            }
+            updateSplitTotals(item.valor);
+            calcRemaining();
         }
 
         function closeModal() { document.getElementById('modal-entry').style.display = 'none'; }
@@ -292,13 +322,11 @@
             tempType = t; 
             document.getElementById('type-entrada').classList.toggle('tab-active', t === 'entrada');
             document.getElementById('type-despesa').classList.toggle('tab-active', t === 'despesa');
-            // Esconder campos de categoria e imputação se for Entrada
             document.getElementById('extra-fields').style.display = (t === 'despesa') ? 'block' : 'none';
         }
 
-        function updateSplitTotals(total) { document.getElementById('split-rem').innerText = parseFloat(total || 0).toFixed(2) + "€"; }
-        
-        function calcRemaining() { 
+        function updateSplitTotals(v) { document.getElementById('split-rem').innerText = parseFloat(v || 0).toFixed(2) + "€"; }
+        function calcRemaining() {
             const total = parseFloat(document.getElementById('form-value').value || 0);
             const a = parseFloat(document.getElementById('split-A').value || 0), b = parseFloat(document.getElementById('split-B').value || 0), ext = parseFloat(document.getElementById('split-EXT').value || 0);
             const rem = total - (a + b + ext);
@@ -308,20 +336,25 @@
         }
 
         async function saveEntry() {
-            const val = parseFloat(document.getElementById('form-value').value), desc = document.getElementById('form-desc').value, date = document.getElementById('form-date').value;
-            if(!val || !desc || !date) return alert("Preencha os campos obrigatórios!");
+            const val = parseFloat(document.getElementById('form-value').value), desc = document.getElementById('form-desc').value, date = document.getElementById('form-date').value, editId = document.getElementById('edit-id').value;
+            if(!val || !desc || !date) return alert("Erro nos campos!");
 
-            let entry = { id: Date.now().toString(), data: date, valor: val, desc: desc };
-
+            let entry = { id: editId || Date.now().toString(), data: date, valor: val, desc: desc };
+            
             if(tempType === 'despesa') {
                 const split = { A: parseFloat(document.getElementById('split-A').value || 0), B: parseFloat(document.getElementById('split-B').value || 0), EXT: parseFloat(document.getElementById('split-EXT').value || 0) };
-                if(Math.abs((split.A + split.B + split.EXT) - val) > 0.01) return alert("A soma das frações deve ser igual ao valor total!");
+                if(Math.abs((split.A + split.B + split.EXT) - val) > 0.01) return alert("Erro na divisão de frações!");
                 entry.cat = document.getElementById('form-cat').value;
                 entry.split = split;
-                db.despesas.push(entry);
-            } else {
-                db.entradas.push(entry);
             }
+
+            // Remover antigo se for edição
+            if(editId) {
+                db.entradas = db.entradas.filter(e => e.id !== editId);
+                db.despesas = db.despesas.filter(d => d.id !== editId);
+            }
+
+            if(tempType === 'entrada') db.entradas.push(entry); else db.despesas.push(entry);
 
             closeModal();
             await saveToDropbox();
@@ -331,18 +364,12 @@
         async function saveImputation(id) {
             const item = db.despesas.find(d => d.id === id);
             const a = parseFloat(document.getElementById(`rev-A-${id}`).value || 0), b = parseFloat(document.getElementById(`rev-B-${id}`).value || 0), ext = parseFloat(document.getElementById(`rev-EXT-${id}`).value || 0);
-            if(Math.abs((a+b+ext) - item.valor) > 0.01) return alert("Soma incorreta!");
+            if(Math.abs((a+b+ext) - item.valor) > 0.01) return alert("Soma errada!");
             item.split = { A: a, B: b, EXT: ext };
             await saveToDropbox(); render();
         }
 
-        async function deleteEntry(id, type) { 
-            if(confirm('Eliminar este registo permanentemente?')) { 
-                if(type==='entrada') db.entradas = db.entradas.filter(e=>e.id!==id); 
-                else db.despesas = db.despesas.filter(d=>d.id!==id); 
-                await saveToDropbox(); render(); 
-            } 
-        }
+        async function deleteEntry(id, type) { if(confirm('Eliminar?')) { if(type==='entrada') db.entradas = db.entradas.filter(e=>e.id!==id); else db.despesas = db.despesas.filter(d=>d.id!==id); await saveToDropbox(); render(); } }
 
         lucide.createIcons();
     </script>
