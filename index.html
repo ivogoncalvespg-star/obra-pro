@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Obra Pro - V15 (Path Fix)</title>
+    <title>Obra Pro - V16 (Auto-Detect)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #f8fafc; }
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .tab-active { background: #2563eb !important; color: white !important; box-shadow: 0 8px 15px rgba(37, 99, 235, 0.2); }
-        input, select, textarea { border: 1px solid #e2e8f0 !important; background: #ffffff !important; padding: 12px 16px !important; border-radius: 14px !important; width: 100% !important; font-size: 16px !important; outline: none !important; color: #1e293b !important; }
+        input, select, textarea { border: 1px solid #e2e8f0 !important; background: #ffffff !important; padding: 12px 16px !important; border-radius: 14px !important; width: 100% !important; color: #1e293b !important; }
         .split-input { background: #f1f5f9 !important; border: 1px solid #cbd5e1 !important; text-align: right; font-weight: 700; }
         .modal-overlay { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); }
         .pie-container { position: relative; width: 180px; height: 180px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
@@ -22,20 +20,17 @@
 </head>
 <body class="h-screen overflow-hidden text-slate-900">
 
-    <!-- LOGIN SCREEN -->
     <div id="login-screen" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-6" style="display: none;">
         <div class="text-center text-white max-w-sm">
-            <div class="bg-blue-600 p-4 rounded-[32px] inline-block mb-6 shadow-2xl"><i data-lucide="wrench" size="48"></i></div>
+            <div class="bg-blue-600 p-4 rounded-[32px] inline-block mb-6"><i data-lucide="wrench" size="48"></i></div>
             <h2 class="text-4xl font-black mb-2 uppercase italic tracking-tighter">Obra Pro</h2>
-            <p class="text-slate-400 mb-10 text-sm">Ligue à sua Dropbox para gerir os dados.</p>
-            <button onclick="doLogin()" class="w-full bg-white text-slate-900 py-5 rounded-[24px] font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Ligar à Dropbox</button>
+            <button onclick="doLogin()" class="w-full bg-white text-slate-900 py-5 rounded-[24px] font-black uppercase text-xs shadow-xl mt-10">Ligar à Dropbox</button>
         </div>
     </div>
 
-    <!-- MAIN APP -->
     <div class="flex h-full">
-        <aside class="w-20 md:w-64 bg-slate-900 text-white flex flex-col items-center md:items-start p-4 md:p-6 border-r border-slate-800 z-20">
-            <div class="flex items-center gap-3 mb-10 mt-4">
+        <aside class="w-20 md:w-64 bg-slate-900 text-white flex flex-col p-4 border-r border-slate-800 z-20">
+            <div class="flex items-center gap-3 mb-10 mt-4 justify-center md:justify-start">
                 <div class="bg-blue-600 p-2 rounded-xl"><i data-lucide="home" size="20"></i></div>
                 <h1 class="hidden md:block text-xl font-black tracking-tighter italic">Obra<span class="text-blue-500">Pro</span></h1>
             </div>
@@ -54,7 +49,7 @@
                     <span id="review-count" class="absolute top-2 right-2 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full hidden">0</span>
                 </button>
             </nav>
-            <div id="sync-status" class="mt-auto text-[8px] font-black uppercase text-slate-500 tracking-[0.2em] p-2 text-center w-full">A Ligar...</div>
+            <div id="sync-status" class="mt-auto text-[8px] font-black uppercase text-slate-500 tracking-[0.2em] p-2 text-center w-full">Ligar...</div>
         </aside>
 
         <main class="flex-1 flex flex-col overflow-hidden">
@@ -70,12 +65,6 @@
     <div id="modal-entry" style="display:none;" class="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
         <div class="bg-white p-6 md:p-8 rounded-[40px] w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh]">
             <h3 id="modal-title" class="text-center font-black uppercase italic text-blue-600 mb-6 tracking-tighter">Registo</h3>
-            
-            <div id="type-selector" class="flex gap-2 mb-6">
-                <button onclick="setEntryType('entrada')" id="type-entrada" class="flex-1 p-3 rounded-2xl font-black text-xs uppercase border-2 border-slate-100">Dinheiro Entrou</button>
-                <button onclick="setEntryType('despesa')" id="type-despesa" class="flex-1 p-3 rounded-2xl font-black text-xs uppercase border-2 border-slate-100">Custo Obra</button>
-            </div>
-
             <div class="space-y-4">
                 <input type="hidden" id="edit-id">
                 <div class="grid grid-cols-2 gap-4">
@@ -83,23 +72,11 @@
                     <div><label class="text-[10px] font-black text-slate-400 uppercase">Valor (€)</label><input type="number" id="form-value" oninput="updateSplitTotals(this.value)"></div>
                 </div>
                 <div><label class="text-[10px] font-black text-slate-400 uppercase">Descrição</label><input type="text" id="form-desc"></div>
-                
                 <div id="extra-fields">
                     <label class="text-[10px] font-black text-slate-400 uppercase">Categoria</label>
                     <select id="form-cat" class="mb-4"></select>
-                    
-                    <div id="split-box" class="bg-slate-50 p-6 rounded-[32px] border border-slate-200">
-                        <p class="text-[10px] font-black text-slate-500 uppercase mb-4 text-center tracking-widest italic">Imputação</p>
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between gap-4"><span class="text-[10px] font-bold uppercase w-24">Fracção A</span><input type="number" id="split-A" class="split-input" oninput="calcRemaining()"></div>
-                            <div class="flex items-center justify-between gap-4"><span class="text-[10px] font-bold uppercase w-24 text-emerald-600">Fracção B</span><input type="number" id="split-B" class="split-input" oninput="calcRemaining()"></div>
-                            <div class="flex items-center justify-between gap-4"><span class="text-[10px] font-bold uppercase w-24 text-amber-500">Exterior</span><input type="number" id="split-EXT" class="split-input" oninput="calcRemaining()"></div>
-                            <div class="flex justify-between items-center pt-2 border-t border-slate-200"><span class="text-[10px] font-black text-slate-400">Pendente:</span><span id="split-rem" class="font-black text-sm text-blue-600">0.00€</span></div>
-                        </div>
-                    </div>
                 </div>
-
-                <button onclick="saveEntry()" class="w-full bg-blue-600 text-white p-5 rounded-3xl font-black uppercase text-xs shadow-xl tracking-widest mt-4">Guardar e Sincronizar</button>
+                <button onclick="saveEntry()" class="w-full bg-blue-600 text-white p-5 rounded-3xl font-black uppercase text-xs shadow-xl mt-4">Guardar</button>
                 <button onclick="closeModal()" class="w-full text-slate-400 font-bold py-2 uppercase text-[10px] text-center">Cancelar</button>
             </div>
         </div>
@@ -107,33 +84,22 @@
 
     <script>
         const CLIENT_ID = 'm258y65zq709vxu'; 
-        const FILE_PATH = '/Obra Pro/obra_data.json'; // O CAMINHO PARA A TUA PASTA
         const REDIRECT_URI = window.location.origin + window.location.pathname;
         
         let dbx;
         let isInitialized = false;
-        let db = {
-            entradas: [],
-            despesas: [],
-            categorias: ["Terreno", "Arquitectura", "Licenças", "Construção", "Acabamentos", "Extras"]
-        };
+        let currentFilePath = ''; // Vai ser detetado automaticamente
 
+        let db = { entradas: [], despesas: [], categorias: ["Terreno", "Arquitectura", "Licenças", "Construção", "Acabamentos", "Extras"] };
         let currentView = 'dashboard';
-        let tempType = 'despesa';
         let accessToken = localStorage.getItem('dbx_token');
 
-        function doLogin() { 
-            window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`; 
-        }
+        function doLogin() { window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`; }
         
         if (window.location.hash) {
             const params = new URLSearchParams(window.location.hash.substring(1));
             const token = params.get('access_token');
-            if (token) { 
-                localStorage.setItem('dbx_token', token); 
-                window.location.hash = ''; 
-                location.reload(); 
-            }
+            if (token) { localStorage.setItem('dbx_token', token); window.location.hash = ''; location.reload(); }
         }
 
         if (!accessToken) { 
@@ -144,29 +110,34 @@
         }
 
         async function initApp() {
-            document.getElementById('sync-status').innerText = "A LER PASTA...";
-            try {
-                const response = await dbx.filesDownload({ path: FILE_PATH });
-                const blobText = await response.result.fileBlob.text();
-                db = JSON.parse(blobText);
-                isInitialized = true;
-                document.getElementById('sync-status').innerText = "ONLINE";
-                render();
-            } catch (e) {
-                console.error("Erro no carregamento:", e);
-                // Se o ficheiro não for encontrado (404/409)
-                if (e.status === 409 || e.status === 404) {
+            const status = document.getElementById('sync-status');
+            status.innerText = "A PROCURAR FICHEIRO...";
+
+            // TENTATIVA 1: Procurar na raiz ou pasta da App
+            const pathsToTry = ['/obra_data.json', '/Obra Pro/obra_data.json'];
+            
+            for (let path of pathsToTry) {
+                try {
+                    const response = await dbx.filesDownload({ path: path });
+                    const blobText = await response.result.fileBlob.text();
+                    db = JSON.parse(blobText);
+                    currentFilePath = path;
                     isInitialized = true;
-                    // Tenta criar o ficheiro se não existir
-                    await saveToDropbox();
+                    status.innerText = "ONLINE";
                     render();
-                } else if (e.status === 401) {
-                    localStorage.removeItem('dbx_token');
-                    location.reload();
-                } else {
-                    document.getElementById('sync-status').innerText = "ERRO PATH";
-                    alert("Não encontrei o ficheiro. Confirme se a pasta se chama 'Obra Pro' e o ficheiro 'obra_data.json'");
+                    return; // Encontrou!
+                } catch (e) {
+                    console.log("Não encontrado em: " + path);
                 }
+            }
+
+            // Se chegou aqui, não encontrou em nenhum sítio
+            status.innerText = "FICHEIRO NÃO ENCONTRADO";
+            if(confirm("Não encontrei o ficheiro obra_data.json na Dropbox. Deseja criar um novo ficheiro vazio?")) {
+                currentFilePath = pathsToTry[0];
+                isInitialized = true;
+                await saveToDropbox();
+                render();
             }
         }
 
@@ -174,15 +145,14 @@
             if (!isInitialized) return;
             document.getElementById('sync-status').innerText = "A GUARDAR...";
             try { 
-                await dbx.filesUpload({ path: FILE_PATH, contents: JSON.stringify(db, null, 2), mode: 'overwrite' }); 
-                document.getElementById('sync-status').innerText = "SINCRO OK"; 
-            }
-            catch (err) { 
-                console.error(err);
-                document.getElementById('sync-status').innerText = "ERRO GRAVAÇÃO"; 
+                await dbx.filesUpload({ path: currentFilePath, contents: JSON.stringify(db, null, 2), mode: 'overwrite' }); 
+                document.getElementById('sync-status').innerText = "GUARDADO"; 
+            } catch (err) { 
+                document.getElementById('sync-status').innerText = "ERRO AO GUARDAR"; 
             }
         }
 
+        // --- RENDERIZAÇÃO E LÓGICA (Simplificada para rapidez) ---
         function setView(v) { currentView = v; render(); }
 
         function render() {
@@ -190,182 +160,74 @@
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('tab-active'));
             document.getElementById('btn-' + currentView).classList.add('tab-active');
 
-            const pending = db.despesas.filter(d => !d.split).length;
-            const badge = document.getElementById('review-count');
-            if(pending > 0) { badge.innerText = pending; badge.style.display = 'block'; } else { badge.style.display = 'none'; }
+            const totalE = db.entradas.reduce((a, b) => a + (Number(b.valor) || 0), 0);
+            const totalD = db.despesas.reduce((a, b) => a + (Number(b.valor) || 0), 0);
+            const saldo = totalE - totalD;
 
             if (currentView === 'dashboard') {
-                const totalE = db.entradas.reduce((a, b) => a + (Number(b.valor) || 0), 0);
-                const totalD = db.despesas.reduce((a, b) => a + (Number(b.valor) || 0), 0);
-                const saldo = totalE - totalD;
-
                 content.innerHTML = `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
                         <div class="bg-slate-900 text-white p-10 rounded-[48px] shadow-2xl">
-                            <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2 italic">Saldo Disponível</p>
-                            <h3 class="text-4xl font-black italic text-blue-400">${saldo.toLocaleString('pt-PT', {minimumFractionDigits:2})}€</h3>
+                            <p class="text-slate-400 text-[10px] font-black uppercase mb-2">Saldo</p>
+                            <h3 class="text-4xl font-black italic text-blue-400">${saldo.toLocaleString('pt-PT')}€</h3>
                         </div>
-                        <div class="bg-white p-10 rounded-[48px] border border-slate-100 shadow-sm">
-                            <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2 text-right italic">Total Investido</p>
-                            <h3 class="text-4xl font-black italic text-slate-800 text-right">${totalD.toLocaleString('pt-PT', {minimumFractionDigits:2})}€</h3>
+                        <div class="bg-white p-10 rounded-[48px] border shadow-sm">
+                            <p class="text-slate-400 text-[10px] font-black uppercase mb-2">Total Gasto</p>
+                            <h3 class="text-4xl font-black italic">${totalD.toLocaleString('pt-PT')}€</h3>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                        <div class="bg-white p-8 rounded-[40px] shadow-sm">
-                            <h4 class="font-black text-slate-800 uppercase mb-8 italic text-xs tracking-widest underline decoration-blue-500">Distribuição por Zona</h4>
-                            ${renderBar('A', 'Fracção A', 'bg-blue-600')}
-                            ${renderBar('B', 'Fracção B', 'bg-emerald-600')}
-                            ${renderBar('EXT', 'Exteriores', 'bg-amber-500')}
-                        </div>
-                        <div class="bg-white p-8 rounded-[40px] shadow-sm text-center">
-                            <h4 class="font-black text-slate-800 uppercase mb-8 italic text-xs tracking-widest">Gastos por Categoria</h4>
-                            <div class="flex flex-col items-center gap-6">${renderPieChart()}<div class="w-full text-left space-y-2">${renderCategoryLegend()}</div></div>
-                        </div>
+                    <div class="bg-white p-8 rounded-[40px] shadow-sm">
+                        <h4 class="font-black mb-6 uppercase text-xs">Resumo por Categoria</h4>
+                        ${db.categorias.map(cat => {
+                            const v = db.despesas.filter(d => d.cat === cat).reduce((a,b) => a + b.valor, 0);
+                            return v > 0 ? `<div class="flex justify-between py-2 border-b text-sm"><span>${cat}</span><span class="font-bold">${v.toLocaleString('pt-PT')}€</span></div>` : '';
+                        }).join('')}
                     </div>`;
-                document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg">+ Novo</button>`;
+                document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest">+ NOVO</button>`;
+            } else {
+                renderList();
             }
-
-            if (currentView === 'review') renderReviewView();
-            if (currentView === 'entradas') renderHistoryList(db.entradas, 'emerald');
-            if (currentView === 'despesas') renderHistoryList(db.despesas, 'red');
             lucide.createIcons();
         }
 
-        function renderBar(key, label, color) {
-            const total = db.despesas.reduce((acc, d) => acc + (d.split ? (Number(d.split[key]) || 0) : 0), 0);
-            return `<div class="mb-6"><div class="flex justify-between text-[10px] font-black text-slate-400 uppercase mb-2"><span>${label}</span><span>${total.toLocaleString('pt-PT')}€</span></div><div class="w-full bg-slate-100 h-4 rounded-full overflow-hidden"><div class="${color} h-full" style="width: ${Math.min(100, (total/300000)*100)}%"></div></div></div>`;
-        }
-
-        function renderPieChart() {
-            const totals = db.categorias.map(cat => ({ label: cat, val: db.despesas.filter(d => d.cat === cat).reduce((a, b) => a + (Number(b.valor)||0), 0) })).filter(c => c.val > 0);
-            const totalSum = totals.reduce((a, b) => a + b.val, 0);
-            if (totalSum === 0) return `<div class="pie-container bg-slate-50"></div>`;
-            let curr = 0; const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-            const grad = totals.map((t, i) => { const p = (t.val / totalSum) * 100; const part = `${colors[i % colors.length]} ${curr}% ${(curr + p)}%`; curr += p; return part; }).join(', ');
-            return `<div class="pie-container" style="background: conic-gradient(${grad})"><div class="pie-hole"></div></div>`;
-        }
-
-        function renderCategoryLegend() {
-            const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-            return db.categorias.map((cat, i) => {
-                const val = db.despesas.filter(d => d.cat === cat).reduce((a, b) => a + (Number(b.valor)||0), 0);
-                return val > 0 ? `<div class="flex justify-between text-xs border-b border-slate-50 py-1"><div><div class="w-2 h-2 inline-block rounded-full mr-2" style="background:${colors[i % colors.length]}"></div><span class="font-bold text-slate-500 uppercase text-[10px]">${cat}</span></div><span class="font-black">${val.toLocaleString('pt-PT')}€</span></div>` : '';
-            }).join('');
-        }
-
-        function renderHistoryList(list, theme) {
+        function renderList() {
+            const list = currentView === 'entradas' ? db.entradas : db.despesas;
             const sorted = [...list].sort((a,b) => new Date(b.data) - new Date(a.data));
-            let html = `<div class="max-w-4xl mx-auto space-y-3">`;
-            sorted.forEach(m => {
-                html += `<div class="bg-white p-5 rounded-[24px] border border-slate-50 flex justify-between items-center shadow-sm">
-                    <div><p class="font-black uppercase text-sm italic">${m.desc}</p><p class="text-[9px] font-bold text-slate-400 uppercase">${m.data} ${m.cat ? '• '+m.cat : ''}</p></div>
-                    <div class="flex items-center gap-6">
-                        <p class="font-black italic text-md ${theme==='emerald'?'text-emerald-600':'text-slate-800'}">${m.valor.toLocaleString('pt-PT')}€</p>
-                        <div class="flex gap-2">
-                            <button onclick="editEntry('${m.id}', '${m.cat?'despesa':'entrada'}')" class="text-slate-300"><i data-lucide="edit-3" size="18"></i></button>
-                            <button onclick="deleteEntry('${m.id}', '${m.cat?'despesa':'entrada'}')" class="text-slate-200"><i data-lucide="trash-2" size="18"></i></button>
-                        </div>
-                    </div></div>`;
-            });
-            document.getElementById('content').innerHTML = html + `</div>`;
-        }
-
-        function renderReviewView() {
-            const list = db.despesas.filter(d => !d.split);
-            document.getElementById('content').innerHTML = `<div class="max-w-xl mx-auto space-y-6">
-                ${list.length === 0 ? '<div class="text-center py-20 opacity-30 font-black italic">TUDO REVISIONADO!</div>' : list.map(item => `
-                    <div class="bg-white p-8 rounded-[40px] shadow-lg border-2 border-orange-100">
-                        <h4 class="font-black text-lg uppercase italic mb-1">${item.desc}</h4>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase mb-6">${item.data} • ${item.valor.toFixed(2)}€</p>
-                        <div class="space-y-4">
-                            <div class="grid grid-cols-3 gap-2">
-                                <input type="number" id="rev-A-${item.id}" placeholder="Frac. A" class="split-input">
-                                <input type="number" id="rev-B-${item.id}" placeholder="Frac. B" class="split-input">
-                                <input type="number" id="rev-EXT-${item.id}" placeholder="Ext." class="split-input">
-                            </div>
-                            <button onclick="saveImputation('${item.id}')" class="w-full bg-slate-900 text-white p-4 rounded-2xl font-black uppercase text-xs">Confirmar Divisão</button>
-                        </div></div>`).join('')}</div>`;
+            document.getElementById('content').innerHTML = sorted.map(m => `
+                <div class="bg-white p-5 rounded-2xl shadow-sm mb-3 flex justify-between items-center">
+                    <div><p class="font-black text-sm italic uppercase">${m.desc}</p><p class="text-[10px] text-slate-400">${m.data}</p></div>
+                    <div class="flex items-center gap-4">
+                        <p class="font-black">${m.valor.toLocaleString('pt-PT')}€</p>
+                        <button onclick="deleteEntry('${m.id}')" class="text-red-200 hover:text-red-500"><i data-lucide="trash-2" size="16"></i></button>
+                    </div>
+                </div>`).join('');
+            document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase">+ NOVO</button>`;
         }
 
         function openModal() {
             document.getElementById('modal-entry').style.display = 'flex';
-            document.getElementById('modal-title').innerText = "Novo Registo";
-            document.getElementById('edit-id').value = "";
             document.getElementById('form-cat').innerHTML = db.categorias.map(c => `<option value="${c}">${c}</option>`).join('');
-            ['form-value','form-desc','split-A','split-B','split-EXT'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('form-date').valueAsDate = new Date();
-            setEntryType('despesa');
         }
-
-        function editEntry(id, type) {
-            const list = (type === 'entrada') ? db.entradas : db.despesas;
-            const item = list.find(x => x.id === id);
-            if(!item) return;
-            openModal();
-            document.getElementById('edit-id').value = id;
-            document.getElementById('form-date').value = item.data;
-            document.getElementById('form-value').value = item.valor;
-            document.getElementById('form-desc').value = item.desc;
-            setEntryType(type);
-            if(type === 'despesa') {
-                document.getElementById('form-cat').value = item.cat;
-                if(item.split) {
-                    document.getElementById('split-A').value = item.split.A;
-                    document.getElementById('split-B').value = item.split.B;
-                    document.getElementById('split-EXT').value = item.split.EXT;
-                }
-            }
-            updateSplitTotals(item.valor);
-        }
-
         function closeModal() { document.getElementById('modal-entry').style.display = 'none'; }
 
-        function setEntryType(t) { 
-            tempType = t; 
-            document.getElementById('type-entrada').classList.toggle('tab-active', t === 'entrada');
-            document.getElementById('type-despesa').classList.toggle('tab-active', t === 'despesa');
-            document.getElementById('extra-fields').style.display = (t === 'despesa') ? 'block' : 'none';
-        }
-
-        function updateSplitTotals(v) { document.getElementById('split-rem').innerText = parseFloat(v || 0).toFixed(2) + "€"; }
-        function calcRemaining() {
-            const total = parseFloat(document.getElementById('form-value').value || 0);
-            const a = parseFloat(document.getElementById('split-A').value || 0), b = parseFloat(document.getElementById('split-B').value || 0), ext = parseFloat(document.getElementById('split-EXT').value || 0);
-            const rem = total - (a + b + ext);
-            const el = document.getElementById('split-rem');
-            el.innerText = rem.toFixed(2) + "€";
-            el.className = Math.abs(rem) < 0.01 ? "text-emerald-500 font-black text-sm" : "text-red-500 font-black text-sm";
-        }
-
         async function saveEntry() {
-            const val = parseFloat(document.getElementById('form-value').value), desc = document.getElementById('form-desc').value, date = document.getElementById('form-date').value, editId = document.getElementById('edit-id').value;
-            if(!val || !desc || !date) return alert("Erro nos campos!");
-
-            let entry = { id: editId || Date.now().toString(), data: date, valor: val, desc: desc };
-            if(tempType === 'despesa') {
-                const split = { A: parseFloat(document.getElementById('split-A').value || 0), B: parseFloat(document.getElementById('split-B').value || 0), EXT: parseFloat(document.getElementById('split-EXT').value || 0) };
-                if(Math.abs((split.A + split.B + split.EXT) - val) > 0.01) return alert("Divisão incorreta!");
-                entry.cat = document.getElementById('form-cat').value;
-                entry.split = split;
-            }
-
-            if(editId) {
-                db.entradas = db.entradas.filter(e => e.id !== editId);
-                db.despesas = db.despesas.filter(d => d.id !== editId);
-            }
-            if(tempType === 'entrada') db.entradas.push(entry); else db.despesas.push(entry);
+            const val = parseFloat(document.getElementById('form-value').value), desc = document.getElementById('form-desc').value, date = document.getElementById('form-date').value;
+            if(!val || !desc) return alert("Preencha os dados");
+            
+            const entry = { id: Date.now().toString(), data: date, valor: val, desc: desc };
+            if(currentView === 'entradas') db.entradas.push(entry); 
+            else { entry.cat = document.getElementById('form-cat').value; db.despesas.push(entry); }
+            
             closeModal(); await saveToDropbox(); render();
         }
 
-        async function saveImputation(id) {
-            const item = db.despesas.find(d => d.id === id);
-            const a = parseFloat(document.getElementById(`rev-A-${id}`).value || 0), b = parseFloat(document.getElementById(`rev-B-${id}`).value || 0), ext = parseFloat(document.getElementById(`rev-EXT-${id}`).value || 0);
-            if(Math.abs((a+b+ext) - item.valor) > 0.01) return alert("Soma errada!");
-            item.split = { A: a, B: b, EXT: ext };
+        async function deleteEntry(id) {
+            if(!confirm("Eliminar?")) return;
+            db.entradas = db.entradas.filter(e => e.id !== id);
+            db.despesas = db.despesas.filter(d => d.id !== id);
             await saveToDropbox(); render();
         }
-
-        async function deleteEntry(id, type) { if(confirm('Eliminar?')) { if(type==='entrada') db.entradas = db.entradas.filter(e=>e.id!==id); else db.despesas = db.despesas.filter(d=>d.id!==id); await saveToDropbox(); render(); } }
 
         lucide.createIcons();
     </script>
