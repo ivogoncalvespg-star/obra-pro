@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Obra Pro - V14 (Nova App Key)</title>
+    <title>Obra Pro - V15 (Path Fix)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
@@ -54,7 +54,7 @@
                     <span id="review-count" class="absolute top-2 right-2 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full hidden">0</span>
                 </button>
             </nav>
-            <div id="sync-status" class="mt-auto text-[8px] font-black uppercase text-slate-500 tracking-[0.2em] p-2 text-center w-full">Ligar...</div>
+            <div id="sync-status" class="mt-auto text-[8px] font-black uppercase text-slate-500 tracking-[0.2em] p-2 text-center w-full">A Ligar...</div>
         </aside>
 
         <main class="flex-1 flex flex-col overflow-hidden">
@@ -106,12 +106,12 @@
     </div>
 
     <script>
-        const CLIENT_ID = 'm258y65zq709vxu'; // TUA NOVA APP KEY
+        const CLIENT_ID = 'm258y65zq709vxu'; 
+        const FILE_PATH = '/Obra Pro/obra_data.json'; // O CAMINHO PARA A TUA PASTA
         const REDIRECT_URI = window.location.origin + window.location.pathname;
+        
         let dbx;
         let isInitialized = false;
-        
-        // BASE DE DADOS VAZIA (Sempre carregada da Dropbox)
         let db = {
             entradas: [],
             despesas: [],
@@ -144,28 +144,28 @@
         }
 
         async function initApp() {
-            document.getElementById('sync-status').innerText = "A CARREGAR...";
+            document.getElementById('sync-status').innerText = "A LER PASTA...";
             try {
-                const response = await dbx.filesDownload({ path: '/obra_data.json' });
+                const response = await dbx.filesDownload({ path: FILE_PATH });
                 const blobText = await response.result.fileBlob.text();
                 db = JSON.parse(blobText);
                 isInitialized = true;
                 document.getElementById('sync-status').innerText = "ONLINE";
                 render();
             } catch (e) {
-                console.error("Erro init:", e);
-                if (e.status === 409 || e.status === 404 || e.status === 401) {
-                    if (e.status === 401) {
-                        localStorage.removeItem('dbx_token');
-                        location.reload();
-                        return;
-                    }
+                console.error("Erro no carregamento:", e);
+                // Se o ficheiro não for encontrado (404/409)
+                if (e.status === 409 || e.status === 404) {
                     isInitialized = true;
+                    // Tenta criar o ficheiro se não existir
                     await saveToDropbox();
                     render();
+                } else if (e.status === 401) {
+                    localStorage.removeItem('dbx_token');
+                    location.reload();
                 } else {
-                    document.getElementById('sync-status').innerText = "ERRO SYNC";
-                    alert("Erro ao ligar à Dropbox. Verifique as configurações (Implicit Grant e Redirect URI).");
+                    document.getElementById('sync-status').innerText = "ERRO PATH";
+                    alert("Não encontrei o ficheiro. Confirme se a pasta se chama 'Obra Pro' e o ficheiro 'obra_data.json'");
                 }
             }
         }
@@ -174,12 +174,12 @@
             if (!isInitialized) return;
             document.getElementById('sync-status').innerText = "A GUARDAR...";
             try { 
-                await dbx.filesUpload({ path: '/obra_data.json', contents: JSON.stringify(db, null, 2), mode: 'overwrite' }); 
+                await dbx.filesUpload({ path: FILE_PATH, contents: JSON.stringify(db, null, 2), mode: 'overwrite' }); 
                 document.getElementById('sync-status').innerText = "SINCRO OK"; 
             }
             catch (err) { 
+                console.error(err);
                 document.getElementById('sync-status').innerText = "ERRO GRAVAÇÃO"; 
-                alert("Falha ao gravar na Dropbox!");
             }
         }
 
@@ -212,13 +212,13 @@
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                         <div class="bg-white p-8 rounded-[40px] shadow-sm">
-                            <h4 class="font-black text-slate-800 uppercase mb-8 italic text-xs tracking-widest underline decoration-blue-500">Divisão por Zona</h4>
+                            <h4 class="font-black text-slate-800 uppercase mb-8 italic text-xs tracking-widest underline decoration-blue-500">Distribuição por Zona</h4>
                             ${renderBar('A', 'Fracção A', 'bg-blue-600')}
                             ${renderBar('B', 'Fracção B', 'bg-emerald-600')}
                             ${renderBar('EXT', 'Exteriores', 'bg-amber-500')}
                         </div>
                         <div class="bg-white p-8 rounded-[40px] shadow-sm text-center">
-                            <h4 class="font-black text-slate-800 uppercase mb-8 italic text-xs tracking-widest">Categorias</h4>
+                            <h4 class="font-black text-slate-800 uppercase mb-8 italic text-xs tracking-widest">Gastos por Categoria</h4>
                             <div class="flex flex-col items-center gap-6">${renderPieChart()}<div class="w-full text-left space-y-2">${renderCategoryLegend()}</div></div>
                         </div>
                     </div>`;
@@ -237,7 +237,7 @@
         }
 
         function renderPieChart() {
-            const totals = db.categorias.map(cat => ({ label: cat, val: db.despesas.filter(d => d.cat === cat).reduce((a, b) => a + b.valor, 0) })).filter(c => c.val > 0);
+            const totals = db.categorias.map(cat => ({ label: cat, val: db.despesas.filter(d => d.cat === cat).reduce((a, b) => a + (Number(b.valor)||0), 0) })).filter(c => c.val > 0);
             const totalSum = totals.reduce((a, b) => a + b.val, 0);
             if (totalSum === 0) return `<div class="pie-container bg-slate-50"></div>`;
             let curr = 0; const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
@@ -248,7 +248,7 @@
         function renderCategoryLegend() {
             const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
             return db.categorias.map((cat, i) => {
-                const val = db.despesas.filter(d => d.cat === cat).reduce((a, b) => a + b.valor, 0);
+                const val = db.despesas.filter(d => d.cat === cat).reduce((a, b) => a + (Number(b.valor)||0), 0);
                 return val > 0 ? `<div class="flex justify-between text-xs border-b border-slate-50 py-1"><div><div class="w-2 h-2 inline-block rounded-full mr-2" style="background:${colors[i % colors.length]}"></div><span class="font-bold text-slate-500 uppercase text-[10px]">${cat}</span></div><span class="font-black">${val.toLocaleString('pt-PT')}€</span></div>` : '';
             }).join('');
         }
