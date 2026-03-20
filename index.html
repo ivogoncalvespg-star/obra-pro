@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Obra Pro - V11 (Edição Total)</title>
+    <title>Obra Pro - V12 (Sync Fix)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
@@ -66,7 +66,7 @@
         </main>
     </div>
 
-    <!-- MODAL (Novo/Editar) -->
+    <!-- MODAL -->
     <div id="modal-entry" style="display:none;" class="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
         <div class="bg-white p-6 md:p-8 rounded-[40px] w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh]">
             <h3 id="modal-title" class="text-center font-black uppercase italic text-blue-600 mb-6 tracking-tighter">Registo</h3>
@@ -109,38 +109,12 @@
         const CLIENT_ID = 'peevpb9v58or0tn';
         const REDIRECT_URI = window.location.origin + window.location.pathname;
         let dbx;
+        let isInitialized = false;
         
-        // --- DADOS ATUALIZADOS DO JSON ---
+        // DADOS NASCEM VAZIOS PARA NÃO SOBRESCREVER DADOS RECENTES COM ANTIGOS
         let db = {
-            entradas: [
-                {"id": "1773934639289", "data": "2025-11-24", "valor": 2570.75, "desc": "Juros ganhos com Neowintech"},
-                {"id": "1773934593649", "data": "2025-11-20", "valor": 92.25, "desc": "Conta pessoal"},
-                {"id": "1773934573550", "data": "2025-11-11", "valor": 230, "desc": "Conta pessoal"},
-                {"id": "1773934552044", "data": "2025-10-29", "valor": 123, "desc": "Conta pessoal"},
-                {"id": "1773934741128", "data": "2025-10-10", "valor": 14.9, "desc": "Conta pessoal"},
-                {"id": "1773934507561", "data": "2025-04-23", "valor": 230, "desc": "Conta pessoal"},
-                {"id": "1773934480950", "data": "2025-04-11", "valor": 2000, "desc": "Dinheiro País Miriam"},
-                {"id": "1773934464788", "data": "2025-01-20", "valor": 2000, "desc": "Dinheiro País Miriam"},
-                {"id": "1773934704651", "data": "2025-01-15", "valor": 311355.57, "desc": "Escritura"},
-                {"id": "1773934358167", "data": "2024-09-23", "valor": 5000, "desc": "Contrato promessa compra e venda "},
-                {"id": "1773934310014", "data": "2024-09-20", "valor": 5000, "desc": "Contrato promessa compra e venda "},
-                {"id": "1773934326659", "data": "2024-09-20", "valor": 5000, "desc": "Contrato promessa compra e venda "},
-                {"id": "1773934290627", "data": "2024-09-19", "valor": 5000, "desc": "Contrato promessa compra e venda "}
-            ],
-            despesas: [
-                {"id": "1773934919047", "data": "2025-01-27", "valor": 190000, "desc": "Escritura terreno", "cat": "Terreno", "split": {"A": 0, "B": 190000, "EXT": 0}},
-                {"id": "1773934964645", "data": "2025-01-27", "valor": 13650, "desc": "IMT", "cat": "Terreno", "split": {"A": 0, "B": 13650, "EXT": 0}},
-                {"id": "1773935011183", "data": "2025-01-27", "valor": 1680, "desc": "Imposto selo", "cat": "Terreno", "split": {"A": 0, "B": 1680, "EXT": 0}},
-                {"id": "1773935057591", "data": "2025-01-27", "valor": 250, "desc": "Certidão ", "cat": "Terreno", "split": {"A": 0, "B": 250, "EXT": 0}},
-                {"id": "1773935109229", "data": "2025-01-27", "valor": 536.6, "desc": "Solicitadora", "cat": "Terreno", "split": {"A": 0, "B": 536.6, "EXT": 0}},
-                {"id": "1773934878383", "data": "2025-01-20", "valor": 20.85, "desc": "Emissão cheque bancario", "cat": "Terreno", "split": {"A": 0, "B": 20.85, "EXT": 0}},
-                {"id": "1773935210857", "data": "2025-01-20", "valor": 2000, "desc": "1 Prestação ", "cat": "Arquitectura", "split": {"A": 2000, "B": 0, "EXT": 0}},
-                {"id": "1773935167352", "data": "2024-12-30", "valor": 2460, "desc": "Fatura 95", "cat": "Arquitectura", "split": {"A": 0, "B": 2460, "EXT": 0}},
-                {"id": "1773934832930", "data": "2024-11-12", "valor": 10000, "desc": "Contrato promessa compra e venda", "cat": "Terreno", "split": {"A": 0, "B": 10000, "EXT": 0}},
-                {"id": "1773934810549", "data": "2024-11-11", "valor": 10000, "desc": "Contrato promessa compra e venda", "cat": "Terreno", "split": {"A": 0, "B": 10000, "EXT": 0}},
-                {"id": "1773935247381", "data": "2024-04-17", "valor": 2460, "desc": "Fatura 155", "cat": "Arquitectura", "split": {"A": 2460, "B": 0, "EXT": 0}},
-                {"id": "1773935289107", "data": "2025-04-11", "valor": 2000, "desc": "2 Prestação ", "cat": "Arquitectura", "split": {"A": 2000, "B": 0, "EXT": 0}}
-            ],
+            entradas: [],
+            despesas: [],
             categorias: ["Terreno", "Arquitectura", "Licenças", "Construção", "Acabamentos", "Extras"]
         };
 
@@ -148,39 +122,63 @@
         let tempType = 'despesa';
         let accessToken = localStorage.getItem('dbx_token');
 
-        // --- AUTH & SYNC ---
         function doLogin() { window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`; }
+        
         if (window.location.hash) {
             const params = new URLSearchParams(window.location.hash.substring(1));
             const token = params.get('access_token');
             if (token) { localStorage.setItem('dbx_token', token); window.location.hash = ''; location.reload(); }
         }
 
-        if (!accessToken) { document.getElementById('login-screen').style.display = 'flex'; }
-        else { dbx = new Dropbox.Dropbox({ accessToken: accessToken }); initApp(); }
+        if (!accessToken) { 
+            document.getElementById('login-screen').style.display = 'flex'; 
+        } else { 
+            dbx = new Dropbox.Dropbox({ accessToken: accessToken }); 
+            initApp(); 
+        }
 
         async function initApp() {
+            document.getElementById('sync-status').innerText = "A CARREGAR...";
             try {
                 const response = await dbx.filesDownload({ path: '/obra_data.json' });
-                const reader = new FileReader();
-                reader.onload = function() { db = JSON.parse(reader.result); render(); };
-                reader.readAsText(response.result.fileBlob);
-            } catch (e) { await saveToDropbox(); render(); }
+                const blobText = await response.result.fileBlob.text();
+                db = JSON.parse(blobText);
+                isInitialized = true;
+                document.getElementById('sync-status').innerText = "ONLINE";
+                render();
+            } catch (e) {
+                console.error("Erro ao carregar:", e);
+                if (e.status === 409 || e.status === 404) {
+                    isInitialized = true;
+                    await saveToDropbox();
+                    render();
+                } else {
+                    document.getElementById('sync-status').innerText = "ERRO LIGAÇÃO";
+                    alert("Atenção: Não foi possível carregar os dados da Dropbox. Verifique a internet.");
+                }
+            }
         }
 
         async function saveToDropbox() {
-            document.getElementById('sync-status').innerText = "Sync...";
-            try { await dbx.filesUpload({ path: '/obra_data.json', contents: JSON.stringify(db, null, 2), mode: 'overwrite' }); document.getElementById('sync-status').innerText = "Ok"; }
-            catch (err) { document.getElementById('sync-status').innerText = "Erro"; }
+            if (!isInitialized) return alert("Erro: Sincronização incompleta. Não pode guardar agora.");
+            document.getElementById('sync-status').innerText = "A GUARDAR...";
+            try { 
+                await dbx.filesUpload({ path: '/obra_data.json', contents: JSON.stringify(db, null, 2), mode: 'overwrite' }); 
+                document.getElementById('sync-status').innerText = "GUARDADO"; 
+            }
+            catch (err) { 
+                document.getElementById('sync-status').innerText = "ERRO SYNC"; 
+                alert("Falha ao enviar dados para a Dropbox!");
+            }
         }
 
-        // --- RENDER ---
         function setView(v) { currentView = v; render(); }
 
         function render() {
             const content = document.getElementById('content');
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('tab-active'));
             document.getElementById('btn-' + currentView).classList.add('tab-active');
+            document.getElementById('view-title').innerText = currentView;
 
             const pending = db.despesas.filter(d => !d.split).length;
             const badge = document.getElementById('review-count');
@@ -195,22 +193,22 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
                         <div class="bg-slate-900 text-white p-10 rounded-[48px] shadow-2xl">
                             <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2 italic">Saldo Disponível</p>
-                            <h3 class="text-5xl font-black italic text-blue-400">${saldo.toLocaleString('pt-PT', {minimumFractionDigits:2})}€</h3>
+                            <h3 class="text-4xl font-black italic text-blue-400">${saldo.toLocaleString('pt-PT', {minimumFractionDigits:2})}€</h3>
                         </div>
                         <div class="bg-white p-10 rounded-[48px] border border-slate-100 shadow-sm">
-                            <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2 text-right italic">Total de Investimento</p>
-                            <h3 class="text-5xl font-black italic text-slate-800 text-right">${totalD.toLocaleString('pt-PT', {minimumFractionDigits:2})}€</h3>
+                            <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2 text-right italic">Total Investido</p>
+                            <h3 class="text-4xl font-black italic text-slate-800 text-right">${totalD.toLocaleString('pt-PT', {minimumFractionDigits:2})}€</h3>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                         <div class="bg-white p-8 rounded-[40px] shadow-sm">
-                            <h4 class="font-black text-slate-800 uppercase mb-8 italic text-xs tracking-widest underline decoration-blue-500">Distribuição por Zona</h4>
+                            <h4 class="font-black text-slate-800 uppercase mb-8 italic text-xs tracking-widest underline decoration-blue-500">Divisão por Zona</h4>
                             ${renderBar('A', 'Fracção A', 'bg-blue-600')}
                             ${renderBar('B', 'Fracção B', 'bg-emerald-600')}
-                            ${renderBar('EXT', 'Arranjos Exteriores', 'bg-amber-500')}
+                            ${renderBar('EXT', 'Exteriores', 'bg-amber-500')}
                         </div>
                         <div class="bg-white p-8 rounded-[40px] shadow-sm text-center">
-                            <h4 class="font-black text-slate-800 uppercase mb-8 italic text-xs tracking-widest">Gastos por Categoria</h4>
+                            <h4 class="font-black text-slate-800 uppercase mb-8 italic text-xs tracking-widest">Categorias</h4>
                             <div class="flex flex-col items-center gap-6">${renderPieChart()}<div class="w-full text-left space-y-2">${renderCategoryLegend()}</div></div>
                         </div>
                     </div>`;
@@ -246,16 +244,16 @@
         }
 
         function renderHistoryList(list, theme) {
-            const sorted = list.sort((a,b) => new Date(b.data) - new Date(a.data));
+            const sorted = [...list].sort((a,b) => new Date(b.data) - new Date(a.data));
             let html = `<div class="max-w-4xl mx-auto space-y-3">`;
             sorted.forEach(m => {
-                html += `<div class="bg-white p-5 rounded-[24px] border border-slate-50 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
+                html += `<div class="bg-white p-5 rounded-[24px] border border-slate-50 flex justify-between items-center shadow-sm">
                     <div><p class="font-black uppercase text-sm italic">${m.desc}</p><p class="text-[9px] font-bold text-slate-400 uppercase">${m.data} ${m.cat ? '• '+m.cat : ''}</p></div>
                     <div class="flex items-center gap-6">
                         <p class="font-black italic text-md ${theme==='emerald'?'text-emerald-600':'text-slate-800'}">${m.valor.toLocaleString('pt-PT')}€</p>
                         <div class="flex gap-2">
-                            <button onclick="editEntry('${m.id}', '${m.cat?'despesa':'entrada'}')" class="text-slate-300 hover:text-blue-500"><i data-lucide="edit-3" size="18"></i></button>
-                            <button onclick="deleteEntry('${m.id}', '${m.cat?'despesa':'entrada'}')" class="text-slate-200 hover:text-red-500"><i data-lucide="trash-2" size="18"></i></button>
+                            <button onclick="editEntry('${m.id}', '${m.cat?'despesa':'entrada'}')" class="text-slate-300"><i data-lucide="edit-3" size="18"></i></button>
+                            <button onclick="deleteEntry('${m.id}', '${m.cat?'despesa':'entrada'}')" class="text-slate-200"><i data-lucide="trash-2" size="18"></i></button>
                         </div>
                     </div></div>`;
             });
@@ -265,7 +263,7 @@
         function renderReviewView() {
             const list = db.despesas.filter(d => !d.split);
             document.getElementById('content').innerHTML = `<div class="max-w-xl mx-auto space-y-6">
-                ${list.length === 0 ? '<div class="text-center py-20 opacity-30 font-black italic">TUDO REVISIONADO!</div>' : list.map(item => `
+                ${list.length === 0 ? '<div class="text-center py-20 opacity-30 font-black italic">TUDO OK!</div>' : list.map(item => `
                     <div class="bg-white p-8 rounded-[40px] shadow-lg border-2 border-orange-100">
                         <h4 class="font-black text-lg uppercase italic mb-1">${item.desc}</h4>
                         <p class="text-[10px] font-bold text-slate-400 uppercase mb-6">${item.data} • ${item.valor.toFixed(2)}€</p>
@@ -279,7 +277,6 @@
                         </div></div>`).join('')}</div>`;
         }
 
-        // --- ENGINE ---
         function openModal() {
             document.getElementById('modal-entry').style.display = 'flex';
             document.getElementById('modal-title').innerText = "Novo Registo";
@@ -294,18 +291,15 @@
             const list = (type === 'entrada') ? db.entradas : db.despesas;
             const item = list.find(x => x.id === id);
             if(!item) return;
-
-            document.getElementById('modal-entry').style.display = 'flex';
+            openModal();
             document.getElementById('modal-title').innerText = "Editar Registo";
             document.getElementById('edit-id').value = id;
             document.getElementById('form-date').value = item.data;
             document.getElementById('form-value').value = item.valor;
             document.getElementById('form-desc').value = item.desc;
-            
             setEntryType(type);
-            
             if(type === 'despesa') {
-                document.getElementById('form-cat').innerHTML = db.categorias.map(c => `<option value="${c}" ${c===item.cat?'selected':''}>${c}</option>`).join('');
+                document.getElementById('form-cat').value = item.cat;
                 if(item.split) {
                     document.getElementById('split-A').value = item.split.A;
                     document.getElementById('split-B').value = item.split.B;
@@ -326,6 +320,7 @@
         }
 
         function updateSplitTotals(v) { document.getElementById('split-rem').innerText = parseFloat(v || 0).toFixed(2) + "€"; }
+        
         function calcRemaining() {
             const total = parseFloat(document.getElementById('form-value').value || 0);
             const a = parseFloat(document.getElementById('split-A').value || 0), b = parseFloat(document.getElementById('split-B').value || 0), ext = parseFloat(document.getElementById('split-EXT').value || 0);
@@ -337,18 +332,17 @@
 
         async function saveEntry() {
             const val = parseFloat(document.getElementById('form-value').value), desc = document.getElementById('form-desc').value, date = document.getElementById('form-date').value, editId = document.getElementById('edit-id').value;
-            if(!val || !desc || !date) return alert("Erro nos campos!");
+            if(!val || !desc || !date) return alert("Preencha todos os campos!");
 
             let entry = { id: editId || Date.now().toString(), data: date, valor: val, desc: desc };
             
             if(tempType === 'despesa') {
                 const split = { A: parseFloat(document.getElementById('split-A').value || 0), B: parseFloat(document.getElementById('split-B').value || 0), EXT: parseFloat(document.getElementById('split-EXT').value || 0) };
-                if(Math.abs((split.A + split.B + split.EXT) - val) > 0.01) return alert("Erro na divisão de frações!");
+                if(Math.abs((split.A + split.B + split.EXT) - val) > 0.01) return alert("A soma das partes não bate certo com o total!");
                 entry.cat = document.getElementById('form-cat').value;
                 entry.split = split;
             }
 
-            // Remover antigo se for edição
             if(editId) {
                 db.entradas = db.entradas.filter(e => e.id !== editId);
                 db.despesas = db.despesas.filter(d => d.id !== editId);
@@ -369,7 +363,7 @@
             await saveToDropbox(); render();
         }
 
-        async function deleteEntry(id, type) { if(confirm('Eliminar?')) { if(type==='entrada') db.entradas = db.entradas.filter(e=>e.id!==id); else db.despesas = db.despesas.filter(d=>d.id!==id); await saveToDropbox(); render(); } }
+        async function deleteEntry(id, type) { if(confirm('Eliminar para sempre?')) { if(type==='entrada') db.entradas = db.entradas.filter(e=>e.id!==id); else db.despesas = db.despesas.filter(d=>d.id!==id); await saveToDropbox(); render(); } }
 
         lucide.createIcons();
     </script>
