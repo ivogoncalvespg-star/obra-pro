@@ -3,156 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Obra Pro - V16 (Auto-Detect)</title>
+    <title>Obra Pro - V17 (Debug Mode)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #f8fafc; }
-        .tab-active { background: #2563eb !important; color: white !important; box-shadow: 0 8px 15px rgba(37, 99, 235, 0.2); }
-        input, select, textarea { border: 1px solid #e2e8f0 !important; background: #ffffff !important; padding: 12px 16px !important; border-radius: 14px !important; width: 100% !important; color: #1e293b !important; }
-        .split-input { background: #f1f5f9 !important; border: 1px solid #cbd5e1 !important; text-align: right; font-weight: 700; }
-        .modal-overlay { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); }
-        .pie-container { position: relative; width: 180px; height: 180px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
-        .pie-hole { width: 110px; height: 110px; background: white; border-radius: 50%; z-index: 2; position: absolute; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .tab-active { background: #2563eb !important; color: white !important; }
+        .status-bar { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body class="h-screen overflow-hidden text-slate-900">
 
+    <!-- ECRÃ DE LOGIN -->
     <div id="login-screen" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-6" style="display: none;">
-        <div class="text-center text-white max-w-sm">
-            <div class="bg-blue-600 p-4 rounded-[32px] inline-block mb-6"><i data-lucide="wrench" size="48"></i></div>
-            <h2 class="text-4xl font-black mb-2 uppercase italic tracking-tighter">Obra Pro</h2>
-            <button onclick="doLogin()" class="w-full bg-white text-slate-900 py-5 rounded-[24px] font-black uppercase text-xs shadow-xl mt-10">Ligar à Dropbox</button>
+        <div class="text-center text-white">
+            <h2 class="text-4xl font-black mb-10 italic">OBRA PRO</h2>
+            <button onclick="doLogin()" class="bg-white text-slate-900 px-10 py-5 rounded-2xl font-black uppercase">Ligar Dropbox</button>
         </div>
     </div>
 
     <div class="flex h-full">
-        <aside class="w-20 md:w-64 bg-slate-900 text-white flex flex-col p-4 border-r border-slate-800 z-20">
-            <div class="flex items-center gap-3 mb-10 mt-4 justify-center md:justify-start">
-                <div class="bg-blue-600 p-2 rounded-xl"><i data-lucide="home" size="20"></i></div>
-                <h1 class="hidden md:block text-xl font-black tracking-tighter italic">Obra<span class="text-blue-500">Pro</span></h1>
+        <!-- BARRA LATERAL -->
+        <aside class="w-20 md:w-64 bg-slate-900 text-white flex flex-col p-4 border-r border-slate-800">
+            <div class="mb-10 mt-4 flex justify-center md:justify-start gap-3">
+                <div class="bg-blue-600 p-2 rounded-xl"><i data-lucide="wrench"></i></div>
+                <h1 class="hidden md:block text-xl font-black italic">Obra<span class="text-blue-500">Pro</span></h1>
             </div>
-            <nav class="space-y-4 w-full">
-                <button onclick="setView('dashboard')" id="btn-dashboard" class="w-full p-4 rounded-2xl flex items-center justify-center md:justify-start gap-4 transition-all text-slate-400 font-bold hover:bg-slate-800">
-                    <i data-lucide="layout-dashboard"></i> <span class="hidden md:block text-sm">Resumo</span>
+            <nav class="space-y-4 flex-1">
+                <button onclick="setView('dashboard')" id="btn-dashboard" class="w-full p-4 rounded-xl flex items-center justify-center md:justify-start gap-4 hover:bg-slate-800 transition-all">
+                    <i data-lucide="layout-dashboard"></i> <span class="hidden md:block">Resumo</span>
                 </button>
-                <button onclick="setView('entradas')" id="btn-entradas" class="w-full p-4 rounded-2xl flex items-center justify-center md:justify-start gap-4 transition-all text-slate-400 font-bold hover:bg-slate-800">
-                    <i data-lucide="arrow-down-left" class="text-emerald-500"></i> <span class="hidden md:block text-sm">Entradas</span>
+                <button onclick="setView('despesas')" id="btn-despesas" class="w-full p-4 rounded-xl flex items-center justify-center md:justify-start gap-4 hover:bg-slate-800 transition-all">
+                    <i data-lucide="arrow-up-right" class="text-red-400"></i> <span class="hidden md:block">Despesas</span>
                 </button>
-                <button onclick="setView('despesas')" id="btn-despesas" class="w-full p-4 rounded-2xl flex items-center justify-center md:justify-start gap-4 transition-all text-slate-400 font-bold hover:bg-slate-800">
-                    <i data-lucide="arrow-up-right" class="text-red-400"></i> <span class="hidden md:block text-sm">Despesas</span>
-                </button>
-                <button onclick="setView('review')" id="btn-review" class="w-full p-4 rounded-2xl flex items-center justify-center md:justify-start gap-4 transition-all text-orange-400 font-bold hover:bg-slate-800 relative">
-                    <i data-lucide="list-checks"></i> <span class="hidden md:block text-sm">Revisão</span>
-                    <span id="review-count" class="absolute top-2 right-2 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full hidden">0</span>
+                <button onclick="setView('entradas')" id="btn-entradas" class="w-full p-4 rounded-xl flex items-center justify-center md:justify-start gap-4 hover:bg-slate-800 transition-all">
+                    <i data-lucide="arrow-down-left" class="text-emerald-500"></i> <span class="hidden md:block">Entradas</span>
                 </button>
             </nav>
-            <div id="sync-status" class="mt-auto text-[8px] font-black uppercase text-slate-500 tracking-[0.2em] p-2 text-center w-full">Ligar...</div>
+            <div id="sync-status" class="status-bar p-2 text-center text-slate-500">A Ligar...</div>
         </aside>
 
+        <!-- CONTEÚDO -->
         <main class="flex-1 flex flex-col overflow-hidden">
-            <header class="bg-white p-6 border-b flex justify-between items-center shadow-sm z-10">
-                <h2 id="view-title" class="text-2xl font-black text-slate-800 uppercase tracking-tighter italic">Dashboard</h2>
+            <header class="bg-white p-6 border-b flex justify-between items-center shadow-sm">
+                <h2 id="view-title" class="text-2xl font-black uppercase italic">Dashboard</h2>
                 <div id="header-actions"></div>
             </header>
-            <div id="content" class="p-4 md:p-8 overflow-y-auto h-full custom-scroll pb-40"></div>
+            <div id="content" class="p-4 md:p-8 overflow-y-auto custom-scroll">
+                <!-- Os dados aparecem aqui -->
+            </div>
         </main>
     </div>
 
-    <!-- MODAL -->
-    <div id="modal-entry" style="display:none;" class="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
-        <div class="bg-white p-6 md:p-8 rounded-[40px] w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh]">
-            <h3 id="modal-title" class="text-center font-black uppercase italic text-blue-600 mb-6 tracking-tighter">Registo</h3>
+    <!-- MODAL NOVO REGISTO -->
+    <div id="modal-entry" style="display:none;" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-[32px] w-full max-w-lg shadow-2xl">
+            <h3 class="text-xl font-black mb-6 uppercase italic text-blue-600">Novo Registo</h3>
             <div class="space-y-4">
-                <input type="hidden" id="edit-id">
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="text-[10px] font-black text-slate-400 uppercase">Data</label><input type="date" id="form-date"></div>
-                    <div><label class="text-[10px] font-black text-slate-400 uppercase">Valor (€)</label><input type="number" id="form-value" oninput="updateSplitTotals(this.value)"></div>
-                </div>
-                <div><label class="text-[10px] font-black text-slate-400 uppercase">Descrição</label><input type="text" id="form-desc"></div>
-                <div id="extra-fields">
-                    <label class="text-[10px] font-black text-slate-400 uppercase">Categoria</label>
-                    <select id="form-cat" class="mb-4"></select>
-                </div>
-                <button onclick="saveEntry()" class="w-full bg-blue-600 text-white p-5 rounded-3xl font-black uppercase text-xs shadow-xl mt-4">Guardar</button>
-                <button onclick="closeModal()" class="w-full text-slate-400 font-bold py-2 uppercase text-[10px] text-center">Cancelar</button>
+                <input type="date" id="form-date" class="w-full p-4 border rounded-xl">
+                <input type="number" id="form-value" placeholder="Valor (€)" class="w-full p-4 border rounded-xl">
+                <input type="text" id="form-desc" placeholder="Descrição" class="w-full p-4 border rounded-xl">
+                <select id="form-cat" class="w-full p-4 border rounded-xl"></select>
+                <button onclick="saveEntry()" class="w-full bg-blue-600 text-white p-5 rounded-2xl font-black uppercase">Guardar na Dropbox</button>
+                <button onclick="closeModal()" class="w-full text-slate-400 font-bold py-2">Cancelar</button>
             </div>
         </div>
     </div>
 
     <script>
-        const CLIENT_ID = 'm258y65zq709vxu'; 
+        const APP_KEY = 'm258y65zq709vxu';
         const REDIRECT_URI = window.location.origin + window.location.pathname;
-        
         let dbx;
         let isInitialized = false;
-        let currentFilePath = ''; // Vai ser detetado automaticamente
-
         let db = { entradas: [], despesas: [], categorias: ["Terreno", "Arquitectura", "Licenças", "Construção", "Acabamentos", "Extras"] };
         let currentView = 'dashboard';
-        let accessToken = localStorage.getItem('dbx_token');
+        let foundPath = '';
 
-        function doLogin() { window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`; }
-        
-        if (window.location.hash) {
-            const params = new URLSearchParams(window.location.hash.substring(1));
-            const token = params.get('access_token');
-            if (token) { localStorage.setItem('dbx_token', token); window.location.hash = ''; location.reload(); }
+        // AUTENTICAÇÃO
+        function doLogin() { 
+            window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${APP_KEY}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`; 
         }
 
-        if (!accessToken) { 
-            document.getElementById('login-screen').style.display = 'flex'; 
-        } else { 
-            dbx = new Dropbox.Dropbox({ accessToken: accessToken }); 
-            initApp(); 
+        const token = new URLSearchParams(window.location.hash.substring(1)).get('access_token') || localStorage.getItem('dbx_token');
+        if (token) {
+            localStorage.setItem('dbx_token', token);
+            window.location.hash = '';
+            dbx = new Dropbox.Dropbox({ accessToken: token });
+            initApp();
+        } else {
+            document.getElementById('login-screen').style.display = 'flex';
         }
 
         async function initApp() {
             const status = document.getElementById('sync-status');
             status.innerText = "A PROCURAR FICHEIRO...";
-
-            // TENTATIVA 1: Procurar na raiz ou pasta da App
-            const pathsToTry = ['/obra_data.json', '/Obra Pro/obra_data.json'];
             
-            for (let path of pathsToTry) {
+            // Tentamos 3 caminhos possíveis
+            const paths = ['/obra_data.json', '/Obra Pro/obra_data.json', '/Apps/ObraPro_Gestao_2026/obra_data.json'];
+            
+            for (let p of paths) {
                 try {
-                    const response = await dbx.filesDownload({ path: path });
-                    const blobText = await response.result.fileBlob.text();
-                    db = JSON.parse(blobText);
-                    currentFilePath = path;
-                    isInitialized = true;
-                    status.innerText = "ONLINE";
-                    render();
-                    return; // Encontrou!
-                } catch (e) {
-                    console.log("Não encontrado em: " + path);
-                }
+                    const res = await dbx.filesDownload({ path: p });
+                    const text = await res.result.fileBlob.text();
+                    const data = JSON.parse(text);
+                    
+                    if (data.despesas && data.despesas.length > 0) {
+                        db = data;
+                        foundPath = p;
+                        isInitialized = true;
+                        status.innerText = "Sincronizado";
+                        render();
+                        console.log("Sucesso! Ficheiro lido de: " + p);
+                        return;
+                    }
+                } catch (e) { console.log("Não existe em: " + p); }
             }
 
-            // Se chegou aqui, não encontrou em nenhum sítio
-            status.innerText = "FICHEIRO NÃO ENCONTRADO";
-            if(confirm("Não encontrei o ficheiro obra_data.json na Dropbox. Deseja criar um novo ficheiro vazio?")) {
-                currentFilePath = pathsToTry[0];
-                isInitialized = true;
-                await saveToDropbox();
-                render();
-            }
+            // Se não encontrou ficheiro com dados
+            status.innerText = "Vazio / Não encontrado";
+            alert("Atenção: Não encontrei o seu ficheiro obra_data.json com dados na Dropbox. A aplicação está a iniciar a zeros. Se tem o ficheiro na Dropbox, mova-o para a raiz.");
+            isInitialized = true;
+            foundPath = '/obra_data.json';
+            render();
         }
 
         async function saveToDropbox() {
             if (!isInitialized) return;
             document.getElementById('sync-status').innerText = "A GUARDAR...";
-            try { 
-                await dbx.filesUpload({ path: currentFilePath, contents: JSON.stringify(db, null, 2), mode: 'overwrite' }); 
-                document.getElementById('sync-status').innerText = "GUARDADO"; 
-            } catch (err) { 
-                document.getElementById('sync-status').innerText = "ERRO AO GUARDAR"; 
+            try {
+                await dbx.filesUpload({ path: foundPath, contents: JSON.stringify(db, null, 2), mode: 'overwrite' });
+                document.getElementById('sync-status').innerText = "Sincronizado";
+            } catch (err) {
+                document.getElementById('sync-status').innerText = "Erro ao Gravar";
+                alert("Erro ao gravar dados na Dropbox!");
             }
         }
 
-        // --- RENDERIZAÇÃO E LÓGICA (Simplificada para rapidez) ---
         function setView(v) { currentView = v; render(); }
 
         function render() {
@@ -162,28 +150,29 @@
 
             const totalE = db.entradas.reduce((a, b) => a + (Number(b.valor) || 0), 0);
             const totalD = db.despesas.reduce((a, b) => a + (Number(b.valor) || 0), 0);
-            const saldo = totalE - totalD;
 
             if (currentView === 'dashboard') {
                 content.innerHTML = `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-                        <div class="bg-slate-900 text-white p-10 rounded-[48px] shadow-2xl">
-                            <p class="text-slate-400 text-[10px] font-black uppercase mb-2">Saldo</p>
-                            <h3 class="text-4xl font-black italic text-blue-400">${saldo.toLocaleString('pt-PT')}€</h3>
+                        <div class="bg-slate-900 text-white p-10 rounded-[40px] shadow-xl">
+                            <p class="text-slate-400 text-xs font-bold uppercase mb-2">Saldo em Conta</p>
+                            <h3 class="text-4xl font-black text-blue-400 italic">${(totalE - totalD).toLocaleString('pt-PT')}€</h3>
                         </div>
-                        <div class="bg-white p-10 rounded-[48px] border shadow-sm">
-                            <p class="text-slate-400 text-[10px] font-black uppercase mb-2">Total Gasto</p>
-                            <h3 class="text-4xl font-black italic">${totalD.toLocaleString('pt-PT')}€</h3>
+                        <div class="bg-white p-10 rounded-[40px] border shadow-sm">
+                            <p class="text-slate-400 text-xs font-bold uppercase mb-2">Investimento Total</p>
+                            <h3 class="text-4xl font-black italic text-slate-800">${totalD.toLocaleString('pt-PT')}€</h3>
                         </div>
                     </div>
-                    <div class="bg-white p-8 rounded-[40px] shadow-sm">
-                        <h4 class="font-black mb-6 uppercase text-xs">Resumo por Categoria</h4>
-                        ${db.categorias.map(cat => {
-                            const v = db.despesas.filter(d => d.cat === cat).reduce((a,b) => a + b.valor, 0);
-                            return v > 0 ? `<div class="flex justify-between py-2 border-b text-sm"><span>${cat}</span><span class="font-bold">${v.toLocaleString('pt-PT')}€</span></div>` : '';
-                        }).join('')}
+                    <div class="bg-white p-8 rounded-[32px] shadow-sm">
+                        <h4 class="font-black mb-6 uppercase italic text-slate-500">Resumo por Categoria</h4>
+                        <div class="space-y-4">
+                            ${db.categorias.map(cat => {
+                                const val = db.despesas.filter(d => d.cat === cat).reduce((a,b) => a + b.valor, 0);
+                                return val > 0 ? `<div class="flex justify-between border-b pb-2"><span>${cat}</span><span class="font-black">${val.toLocaleString('pt-PT')}€</span></div>` : '';
+                            }).join('')}
+                        </div>
                     </div>`;
-                document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest">+ NOVO</button>`;
+                document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-black text-xs uppercase">+ Novo</button>`;
             } else {
                 renderList();
             }
@@ -194,14 +183,14 @@
             const list = currentView === 'entradas' ? db.entradas : db.despesas;
             const sorted = [...list].sort((a,b) => new Date(b.data) - new Date(a.data));
             document.getElementById('content').innerHTML = sorted.map(m => `
-                <div class="bg-white p-5 rounded-2xl shadow-sm mb-3 flex justify-between items-center">
-                    <div><p class="font-black text-sm italic uppercase">${m.desc}</p><p class="text-[10px] text-slate-400">${m.data}</p></div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm mb-3 flex justify-between items-center border-l-4 ${currentView==='entradas'?'border-emerald-500':'border-red-500'}">
+                    <div><p class="font-black italic uppercase text-sm">${m.desc}</p><p class="text-[10px] text-slate-400 font-bold">${m.data} ${m.cat ? '• '+m.cat : ''}</p></div>
                     <div class="flex items-center gap-4">
-                        <p class="font-black">${m.valor.toLocaleString('pt-PT')}€</p>
-                        <button onclick="deleteEntry('${m.id}')" class="text-red-200 hover:text-red-500"><i data-lucide="trash-2" size="16"></i></button>
+                        <p class="font-black text-lg">${m.valor.toLocaleString('pt-PT')}€</p>
+                        <button onclick="deleteEntry('${m.id}')" class="text-slate-200 hover:text-red-500"><i data-lucide="trash-2" size="18"></i></button>
                     </div>
                 </div>`).join('');
-            document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase">+ NOVO</button>`;
+            document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-black text-xs uppercase">+ Adicionar</button>`;
         }
 
         function openModal() {
@@ -213,7 +202,7 @@
 
         async function saveEntry() {
             const val = parseFloat(document.getElementById('form-value').value), desc = document.getElementById('form-desc').value, date = document.getElementById('form-date').value;
-            if(!val || !desc) return alert("Preencha os dados");
+            if(!val || !desc) return alert("Preencha os dados!");
             
             const entry = { id: Date.now().toString(), data: date, valor: val, desc: desc };
             if(currentView === 'entradas') db.entradas.push(entry); 
@@ -223,7 +212,7 @@
         }
 
         async function deleteEntry(id) {
-            if(!confirm("Eliminar?")) return;
+            if(!confirm("Apagar registo?")) return;
             db.entradas = db.entradas.filter(e => e.id !== id);
             db.despesas = db.despesas.filter(d => d.id !== id);
             await saveToDropbox(); render();
