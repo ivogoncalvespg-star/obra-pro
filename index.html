@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Obra Pro - V12 (Sync Fix)</title>
+    <title>Obra Pro - V14 (Nova App Key)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
@@ -54,7 +54,7 @@
                     <span id="review-count" class="absolute top-2 right-2 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full hidden">0</span>
                 </button>
             </nav>
-            <div id="sync-status" class="mt-auto text-[8px] font-black uppercase text-slate-500 tracking-[0.2em] p-2 text-center w-full">Dropbox</div>
+            <div id="sync-status" class="mt-auto text-[8px] font-black uppercase text-slate-500 tracking-[0.2em] p-2 text-center w-full">Ligar...</div>
         </aside>
 
         <main class="flex-1 flex flex-col overflow-hidden">
@@ -106,12 +106,12 @@
     </div>
 
     <script>
-        const CLIENT_ID = 'peevpb9v58or0tn';
+        const CLIENT_ID = 'm258y65zq709vxu'; // TUA NOVA APP KEY
         const REDIRECT_URI = window.location.origin + window.location.pathname;
         let dbx;
         let isInitialized = false;
         
-        // DADOS NASCEM VAZIOS PARA NÃO SOBRESCREVER DADOS RECENTES COM ANTIGOS
+        // BASE DE DADOS VAZIA (Sempre carregada da Dropbox)
         let db = {
             entradas: [],
             despesas: [],
@@ -122,12 +122,18 @@
         let tempType = 'despesa';
         let accessToken = localStorage.getItem('dbx_token');
 
-        function doLogin() { window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`; }
+        function doLogin() { 
+            window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`; 
+        }
         
         if (window.location.hash) {
             const params = new URLSearchParams(window.location.hash.substring(1));
             const token = params.get('access_token');
-            if (token) { localStorage.setItem('dbx_token', token); window.location.hash = ''; location.reload(); }
+            if (token) { 
+                localStorage.setItem('dbx_token', token); 
+                window.location.hash = ''; 
+                location.reload(); 
+            }
         }
 
         if (!accessToken) { 
@@ -147,28 +153,33 @@
                 document.getElementById('sync-status').innerText = "ONLINE";
                 render();
             } catch (e) {
-                console.error("Erro ao carregar:", e);
-                if (e.status === 409 || e.status === 404) {
+                console.error("Erro init:", e);
+                if (e.status === 409 || e.status === 404 || e.status === 401) {
+                    if (e.status === 401) {
+                        localStorage.removeItem('dbx_token');
+                        location.reload();
+                        return;
+                    }
                     isInitialized = true;
                     await saveToDropbox();
                     render();
                 } else {
-                    document.getElementById('sync-status').innerText = "ERRO LIGAÇÃO";
-                    alert("Atenção: Não foi possível carregar os dados da Dropbox. Verifique a internet.");
+                    document.getElementById('sync-status').innerText = "ERRO SYNC";
+                    alert("Erro ao ligar à Dropbox. Verifique as configurações (Implicit Grant e Redirect URI).");
                 }
             }
         }
 
         async function saveToDropbox() {
-            if (!isInitialized) return alert("Erro: Sincronização incompleta. Não pode guardar agora.");
+            if (!isInitialized) return;
             document.getElementById('sync-status').innerText = "A GUARDAR...";
             try { 
                 await dbx.filesUpload({ path: '/obra_data.json', contents: JSON.stringify(db, null, 2), mode: 'overwrite' }); 
-                document.getElementById('sync-status').innerText = "GUARDADO"; 
+                document.getElementById('sync-status').innerText = "SINCRO OK"; 
             }
             catch (err) { 
-                document.getElementById('sync-status').innerText = "ERRO SYNC"; 
-                alert("Falha ao enviar dados para a Dropbox!");
+                document.getElementById('sync-status').innerText = "ERRO GRAVAÇÃO"; 
+                alert("Falha ao gravar na Dropbox!");
             }
         }
 
@@ -178,15 +189,14 @@
             const content = document.getElementById('content');
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('tab-active'));
             document.getElementById('btn-' + currentView).classList.add('tab-active');
-            document.getElementById('view-title').innerText = currentView;
 
             const pending = db.despesas.filter(d => !d.split).length;
             const badge = document.getElementById('review-count');
             if(pending > 0) { badge.innerText = pending; badge.style.display = 'block'; } else { badge.style.display = 'none'; }
 
             if (currentView === 'dashboard') {
-                const totalE = db.entradas.reduce((a, b) => a + b.valor, 0);
-                const totalD = db.despesas.reduce((a, b) => a + b.valor, 0);
+                const totalE = db.entradas.reduce((a, b) => a + (Number(b.valor) || 0), 0);
+                const totalD = db.despesas.reduce((a, b) => a + (Number(b.valor) || 0), 0);
                 const saldo = totalE - totalD;
 
                 content.innerHTML = `
@@ -222,7 +232,7 @@
         }
 
         function renderBar(key, label, color) {
-            const total = db.despesas.reduce((acc, d) => acc + (d.split ? (d.split[key] || 0) : 0), 0);
+            const total = db.despesas.reduce((acc, d) => acc + (d.split ? (Number(d.split[key]) || 0) : 0), 0);
             return `<div class="mb-6"><div class="flex justify-between text-[10px] font-black text-slate-400 uppercase mb-2"><span>${label}</span><span>${total.toLocaleString('pt-PT')}€</span></div><div class="w-full bg-slate-100 h-4 rounded-full overflow-hidden"><div class="${color} h-full" style="width: ${Math.min(100, (total/300000)*100)}%"></div></div></div>`;
         }
 
@@ -263,7 +273,7 @@
         function renderReviewView() {
             const list = db.despesas.filter(d => !d.split);
             document.getElementById('content').innerHTML = `<div class="max-w-xl mx-auto space-y-6">
-                ${list.length === 0 ? '<div class="text-center py-20 opacity-30 font-black italic">TUDO OK!</div>' : list.map(item => `
+                ${list.length === 0 ? '<div class="text-center py-20 opacity-30 font-black italic">TUDO REVISIONADO!</div>' : list.map(item => `
                     <div class="bg-white p-8 rounded-[40px] shadow-lg border-2 border-orange-100">
                         <h4 class="font-black text-lg uppercase italic mb-1">${item.desc}</h4>
                         <p class="text-[10px] font-bold text-slate-400 uppercase mb-6">${item.data} • ${item.valor.toFixed(2)}€</p>
@@ -292,7 +302,6 @@
             const item = list.find(x => x.id === id);
             if(!item) return;
             openModal();
-            document.getElementById('modal-title').innerText = "Editar Registo";
             document.getElementById('edit-id').value = id;
             document.getElementById('form-date').value = item.data;
             document.getElementById('form-value').value = item.valor;
@@ -307,7 +316,6 @@
                 }
             }
             updateSplitTotals(item.valor);
-            calcRemaining();
         }
 
         function closeModal() { document.getElementById('modal-entry').style.display = 'none'; }
@@ -320,7 +328,6 @@
         }
 
         function updateSplitTotals(v) { document.getElementById('split-rem').innerText = parseFloat(v || 0).toFixed(2) + "€"; }
-        
         function calcRemaining() {
             const total = parseFloat(document.getElementById('form-value').value || 0);
             const a = parseFloat(document.getElementById('split-A').value || 0), b = parseFloat(document.getElementById('split-B').value || 0), ext = parseFloat(document.getElementById('split-EXT').value || 0);
@@ -332,13 +339,12 @@
 
         async function saveEntry() {
             const val = parseFloat(document.getElementById('form-value').value), desc = document.getElementById('form-desc').value, date = document.getElementById('form-date').value, editId = document.getElementById('edit-id').value;
-            if(!val || !desc || !date) return alert("Preencha todos os campos!");
+            if(!val || !desc || !date) return alert("Erro nos campos!");
 
             let entry = { id: editId || Date.now().toString(), data: date, valor: val, desc: desc };
-            
             if(tempType === 'despesa') {
                 const split = { A: parseFloat(document.getElementById('split-A').value || 0), B: parseFloat(document.getElementById('split-B').value || 0), EXT: parseFloat(document.getElementById('split-EXT').value || 0) };
-                if(Math.abs((split.A + split.B + split.EXT) - val) > 0.01) return alert("A soma das partes não bate certo com o total!");
+                if(Math.abs((split.A + split.B + split.EXT) - val) > 0.01) return alert("Divisão incorreta!");
                 entry.cat = document.getElementById('form-cat').value;
                 entry.split = split;
             }
@@ -347,12 +353,8 @@
                 db.entradas = db.entradas.filter(e => e.id !== editId);
                 db.despesas = db.despesas.filter(d => d.id !== editId);
             }
-
             if(tempType === 'entrada') db.entradas.push(entry); else db.despesas.push(entry);
-
-            closeModal();
-            await saveToDropbox();
-            render();
+            closeModal(); await saveToDropbox(); render();
         }
 
         async function saveImputation(id) {
@@ -363,7 +365,7 @@
             await saveToDropbox(); render();
         }
 
-        async function deleteEntry(id, type) { if(confirm('Eliminar para sempre?')) { if(type==='entrada') db.entradas = db.entradas.filter(e=>e.id!==id); else db.despesas = db.despesas.filter(d=>d.id!==id); await saveToDropbox(); render(); } }
+        async function deleteEntry(id, type) { if(confirm('Eliminar?')) { if(type==='entrada') db.entradas = db.entradas.filter(e=>e.id!==id); else db.despesas = db.despesas.filter(d=>d.id!==id); await saveToDropbox(); render(); } }
 
         lucide.createIcons();
     </script>
