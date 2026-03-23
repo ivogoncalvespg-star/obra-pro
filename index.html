@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Obra Pro - Debug Pro</title>
+    <title>Obra Pro - Restore Mode</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
@@ -16,7 +16,6 @@
 </head>
 <body class="h-screen overflow-hidden text-slate-900">
 
-    <!-- LOGIN SCREEN -->
     <div id="login-screen" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-6" style="display: none;">
         <div class="text-center text-white">
             <div class="bg-blue-600 p-4 rounded-3xl inline-block mb-6 shadow-2xl"><i data-lucide="wrench" size="48"></i></div>
@@ -26,24 +25,24 @@
     </div>
 
     <div class="flex h-full">
-        <!-- SIDEBAR -->
         <aside class="w-20 md:w-64 bg-slate-900 text-white flex flex-col p-4 border-r border-slate-800">
             <div class="mb-10 mt-4 flex justify-center md:justify-start gap-3 items-center">
                 <div class="bg-blue-600 p-2 rounded-xl"><i data-lucide="home" size="20"></i></div>
                 <h1 class="hidden md:block text-xl font-black italic tracking-tighter">Obra<span class="text-blue-500">Pro</span></h1>
             </div>
             <nav class="space-y-4 flex-1">
-                <button onclick="setView('dashboard')" id="btn-dashboard" class="w-full p-4 rounded-xl flex items-center justify-center md:justify-start gap-4 hover:bg-slate-800">
+                <button onclick="setView('dashboard')" id="btn-dashboard" class="w-full p-4 rounded-xl flex items-center justify-center md:justify-start gap-4 hover:bg-slate-800 transition-all">
                     <i data-lucide="layout-dashboard"></i> <span class="hidden md:block font-bold">Resumo</span>
                 </button>
-                <button onclick="setView('despesas')" id="btn-despesas" class="w-full p-4 rounded-xl flex items-center justify-center md:justify-start gap-4 hover:bg-slate-800">
+                <button onclick="setView('despesas')" id="btn-despesas" class="w-full p-4 rounded-xl flex items-center justify-center md:justify-start gap-4 hover:bg-slate-800 transition-all">
                     <i data-lucide="arrow-up-right" class="text-red-400"></i> <span class="hidden md:block font-bold">Despesas</span>
                 </button>
-                <button onclick="setView('entradas')" id="btn-entradas" class="w-full p-4 rounded-xl flex items-center justify-center md:justify-start gap-4 hover:bg-slate-800">
+                <button onclick="setView('entradas')" id="btn-entradas" class="w-full p-4 rounded-xl flex items-center justify-center md:justify-start gap-4 hover:bg-slate-800 transition-all">
                     <i data-lucide="arrow-down-left" class="text-emerald-500"></i> <span class="hidden md:block font-bold">Entradas</span>
                 </button>
             </nav>
             <div class="mt-auto p-2">
+                <button onclick="importData()" class="w-full mb-2 text-[8px] text-slate-600 hover:text-white uppercase font-black border border-slate-800 rounded p-1">Importar JSON</button>
                 <button onclick="doLogout()" class="w-full mb-4 text-[10px] text-slate-500 hover:text-white uppercase font-black">Sair / Logout</button>
                 <div class="text-[10px] font-black uppercase text-slate-500 text-center border-t border-slate-800 pt-4">
                     <span id="status-dot" class="status-dot bg-slate-600"></span>
@@ -52,7 +51,6 @@
             </div>
         </aside>
 
-        <!-- MAIN -->
         <main class="flex-1 flex flex-col overflow-hidden">
             <header class="bg-white p-6 border-b flex justify-between items-center shadow-sm">
                 <h2 id="view-title" class="text-2xl font-black uppercase italic tracking-tighter">Dashboard</h2>
@@ -62,7 +60,7 @@
         </main>
     </div>
 
-    <!-- MODAL -->
+    <!-- MODAL NOVO REGISTO -->
     <div id="modal-entry" style="display:none;" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white p-8 rounded-[40px] w-full max-w-lg shadow-2xl">
             <h3 class="text-xl font-black mb-6 uppercase italic text-blue-600">Novo Registo</h3>
@@ -71,7 +69,7 @@
                 <input type="number" id="form-value" placeholder="Valor (€)" class="w-full p-4 border rounded-xl">
                 <input type="text" id="form-desc" placeholder="Descrição" class="w-full p-4 border rounded-xl">
                 <select id="form-cat" class="w-full p-4 border rounded-xl"></select>
-                <button onclick="saveEntry()" class="w-full bg-blue-600 text-white p-5 rounded-2xl font-black uppercase text-sm shadow-xl mt-4">Guardar</button>
+                <button onclick="saveEntry()" class="w-full bg-blue-600 text-white p-5 rounded-2xl font-black uppercase text-sm shadow-xl mt-4">Guardar na Dropbox</button>
                 <button onclick="closeModal()" class="w-full text-slate-400 font-bold py-2 uppercase text-[10px] text-center">Cancelar</button>
             </div>
         </div>
@@ -119,11 +117,10 @@
                 if (e.status === 404 || e.status === 409) {
                     isInitialized = true;
                     await saveToDropbox(); 
-                    updateStatus("NOVO FICHEIRO", "bg-blue-500");
+                    updateStatus("ONLINE", "bg-emerald-500");
                     render();
                 } else {
                     updateStatus("ERRO " + (e.status || ""), "bg-red-500");
-                    if (e.status === 401) doLogout();
                 }
             }
         }
@@ -135,6 +132,23 @@
                 await dbx.filesUpload({ path: FILE_NAME, contents: JSON.stringify(db, null, 2), mode: 'overwrite' });
                 updateStatus("ONLINE", "bg-emerald-500");
             } catch (err) { updateStatus("ERRO GRAVAR", "bg-red-500"); }
+        }
+
+        async function importData() {
+            const jsonText = prompt("Cole aqui o conteúdo do seu ficheiro JSON:");
+            if (jsonText) {
+                try {
+                    const parsed = JSON.parse(jsonText);
+                    if (parsed.entradas || parsed.despesas) {
+                        db = parsed;
+                        await saveToDropbox();
+                        render();
+                        alert("Dados importados com sucesso!");
+                    }
+                } catch (e) {
+                    alert("Erro: O texto colado não é um JSON válido.");
+                }
+            }
         }
 
         function updateStatus(text, colorClass) {
@@ -177,7 +191,7 @@
                             }).join('')}
                         </div>
                     </div>`;
-                document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase">+ Novo</button>`;
+                document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg">+ Novo</button>`;
             } else {
                 renderList();
             }
