@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Obra Pro - Restore Mode</title>
+    <title>Obra Pro - Segurança Total</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
@@ -60,7 +60,7 @@
         </main>
     </div>
 
-    <!-- MODAL NOVO REGISTO -->
+    <!-- MODAL -->
     <div id="modal-entry" style="display:none;" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white p-8 rounded-[40px] w-full max-w-lg shadow-2xl">
             <h3 class="text-xl font-black mb-6 uppercase italic text-blue-600">Novo Registo</h3>
@@ -69,7 +69,7 @@
                 <input type="number" id="form-value" placeholder="Valor (€)" class="w-full p-4 border rounded-xl">
                 <input type="text" id="form-desc" placeholder="Descrição" class="w-full p-4 border rounded-xl">
                 <select id="form-cat" class="w-full p-4 border rounded-xl"></select>
-                <button onclick="saveEntry()" class="w-full bg-blue-600 text-white p-5 rounded-2xl font-black uppercase text-sm shadow-xl mt-4">Guardar na Dropbox</button>
+                <button onclick="saveEntry()" class="w-full bg-blue-600 text-white p-5 rounded-2xl font-black uppercase text-sm shadow-xl mt-4">Guardar</button>
                 <button onclick="closeModal()" class="w-full text-slate-400 font-bold py-2 uppercase text-[10px] text-center">Cancelar</button>
             </div>
         </div>
@@ -86,11 +86,7 @@
         let currentView = 'dashboard';
 
         function doLogin() { window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${APP_KEY}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`; }
-        
-        function doLogout() {
-            localStorage.removeItem('dbx_token');
-            location.reload();
-        }
+        function doLogout() { localStorage.removeItem('dbx_token'); location.reload(); }
 
         const token = new URLSearchParams(window.location.hash.substring(1)).get('access_token') || localStorage.getItem('dbx_token');
 
@@ -109,18 +105,27 @@
                 const res = await dbx.filesDownload({ path: FILE_NAME });
                 const text = await res.result.fileBlob.text();
                 db = JSON.parse(text);
+                
+                // Backup local de segurança
+                localStorage.setItem('obra_backup', text);
+                
                 isInitialized = true;
                 updateStatus("ONLINE", "bg-emerald-500");
                 render();
             } catch (e) {
                 console.error(e);
-                if (e.status === 404 || e.status === 409) {
+                // Se falhar a net, tenta carregar o backup do telemóvel
+                const backup = localStorage.getItem('obra_backup');
+                if (backup) {
+                    db = JSON.parse(backup);
+                    isInitialized = true;
+                    updateStatus("MODO OFFLINE", "bg-amber-500");
+                    render();
+                } else if (e.status === 404 || e.status === 409) {
                     isInitialized = true;
                     await saveToDropbox(); 
                     updateStatus("ONLINE", "bg-emerald-500");
                     render();
-                } else {
-                    updateStatus("ERRO " + (e.status || ""), "bg-red-500");
                 }
             }
         }
@@ -128,26 +133,29 @@
         async function saveToDropbox() {
             if (!isInitialized) return;
             updateStatus("A GUARDAR...", "bg-amber-500");
+            const dataStr = JSON.stringify(db, null, 2);
+            
+            // Grava sempre no backup local primeiro
+            localStorage.setItem('obra_backup', dataStr);
+
             try {
-                await dbx.filesUpload({ path: FILE_NAME, contents: JSON.stringify(db, null, 2), mode: 'overwrite' });
+                await dbx.filesUpload({ path: FILE_NAME, contents: dataStr, mode: 'overwrite' });
                 updateStatus("ONLINE", "bg-emerald-500");
-            } catch (err) { updateStatus("ERRO GRAVAR", "bg-red-500"); }
+            } catch (err) { 
+                updateStatus("ERRO GRAVAR", "bg-red-500");
+                alert("Dados guardados apenas no telemóvel (sem internet). Ligue-se para sincronizar.");
+            }
         }
 
         async function importData() {
-            const jsonText = prompt("Cole aqui o conteúdo do seu ficheiro JSON:");
+            const jsonText = prompt("Cole aqui o JSON:");
             if (jsonText) {
                 try {
-                    const parsed = JSON.parse(jsonText);
-                    if (parsed.entradas || parsed.despesas) {
-                        db = parsed;
-                        await saveToDropbox();
-                        render();
-                        alert("Dados importados com sucesso!");
-                    }
-                } catch (e) {
-                    alert("Erro: O texto colado não é um JSON válido.");
-                }
+                    db = JSON.parse(jsonText);
+                    isInitialized = true;
+                    await saveToDropbox();
+                    render();
+                } catch (e) { alert("JSON inválido"); }
             }
         }
 
@@ -191,7 +199,7 @@
                             }).join('')}
                         </div>
                     </div>`;
-                document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg">+ Novo</button>`;
+                document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase shadow-lg">+ Novo</button>`;
             } else {
                 renderList();
             }
