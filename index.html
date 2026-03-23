@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Obra Pro - V18 (App Folder Fix)</title>
+    <title>Obra Pro - Final Sync</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
@@ -11,46 +11,42 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         .tab-active { background: #2563eb !important; color: white !important; box-shadow: 0 8px 15px rgba(37, 99, 235, 0.2); }
-        input, select { border: 1px solid #e2e8f0 !important; padding: 12px !important; border-radius: 12px !important; width: 100%; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
     </style>
 </head>
 <body class="h-screen overflow-hidden text-slate-900">
 
-    <!-- LOGIN -->
     <div id="login-screen" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-6" style="display: none;">
         <div class="text-center text-white">
             <div class="bg-blue-600 p-4 rounded-3xl inline-block mb-6 shadow-2xl"><i data-lucide="wrench" size="48"></i></div>
-            <h2 class="text-4xl font-black mb-10 italic tracking-tighter">OBRA PRO</h2>
-            <button onclick="doLogin()" class="w-full bg-white text-slate-900 py-5 rounded-2xl font-black uppercase text-sm shadow-xl active:scale-95 transition-all">Ligar à Dropbox</button>
+            <h2 class="text-4xl font-black mb-10 italic tracking-tighter uppercase">Obra Pro</h2>
+            <button onclick="doLogin()" class="w-full bg-white text-slate-900 py-5 rounded-2xl font-black uppercase text-sm">Ligar à Dropbox</button>
         </div>
     </div>
 
     <div class="flex h-full">
-        <!-- SIDEBAR -->
         <aside class="w-20 md:w-64 bg-slate-900 text-white flex flex-col p-4 border-r border-slate-800">
             <div class="mb-10 mt-4 flex justify-center md:justify-start gap-3 items-center">
                 <div class="bg-blue-600 p-2 rounded-xl"><i data-lucide="home" size="20"></i></div>
                 <h1 class="hidden md:block text-xl font-black italic tracking-tighter">Obra<span class="text-blue-500">Pro</span></h1>
             </div>
             <nav class="space-y-4 flex-1">
-                <button onclick="setView('dashboard')" id="btn-dashboard" class="w-full p-4 rounded-xl flex items-center justify-center md:justify-start gap-4 hover:bg-slate-800">
+                <button onclick="setView('dashboard')" id="btn-dashboard" class="w-full p-4 rounded-xl flex items-center justify-center md:justify-start gap-4 hover:bg-slate-800 transition-all">
                     <i data-lucide="layout-dashboard"></i> <span class="hidden md:block font-bold">Resumo</span>
                 </button>
-                <button onclick="setView('despesas')" id="btn-despesas" class="w-full p-4 rounded-xl flex items-center justify-center md:justify-start gap-4 hover:bg-slate-800">
+                <button onclick="setView('despesas')" id="btn-despesas" class="w-full p-4 rounded-xl flex items-center justify-center md:justify-start gap-4 hover:bg-slate-800 transition-all">
                     <i data-lucide="arrow-up-right" class="text-red-400"></i> <span class="hidden md:block font-bold">Despesas</span>
                 </button>
-                <button onclick="setView('entradas')" id="btn-entradas" class="w-full p-4 rounded-xl flex items-center justify-center md:justify-start gap-4 hover:bg-slate-800">
+                <button onclick="setView('entradas')" id="btn-entradas" class="w-full p-4 rounded-xl flex items-center justify-center md:justify-start gap-4 hover:bg-slate-800 transition-all">
                     <i data-lucide="arrow-down-left" class="text-emerald-500"></i> <span class="hidden md:block font-bold">Entradas</span>
                 </button>
             </nav>
-            <div id="sync-status-container" class="mt-auto p-2 text-[10px] font-black uppercase text-slate-500 text-center">
+            <div class="mt-auto p-2 text-[10px] font-black uppercase text-slate-500 text-center">
                 <span id="status-dot" class="status-dot bg-slate-600"></span>
                 <span id="sync-status">A Ligar...</span>
             </div>
         </aside>
 
-        <!-- MAIN -->
         <main class="flex-1 flex flex-col overflow-hidden">
             <header class="bg-white p-6 border-b flex justify-between items-center shadow-sm">
                 <h2 id="view-title" class="text-2xl font-black uppercase italic tracking-tighter">Dashboard</h2>
@@ -65,19 +61,19 @@
         <div class="bg-white p-8 rounded-[40px] w-full max-w-lg shadow-2xl">
             <h3 class="text-xl font-black mb-6 uppercase italic text-blue-600">Novo Registo</h3>
             <div class="space-y-4">
-                <input type="date" id="form-date">
-                <input type="number" id="form-value" placeholder="Valor (€)">
-                <input type="text" id="form-desc" placeholder="Descrição">
-                <select id="form-cat"></select>
+                <input type="date" id="form-date" class="w-full p-4 border rounded-xl">
+                <input type="number" id="form-value" placeholder="Valor (€)" class="w-full p-4 border rounded-xl">
+                <input type="text" id="form-desc" placeholder="Descrição" class="w-full p-4 border rounded-xl">
+                <select id="form-cat" class="w-full p-4 border rounded-xl"></select>
                 <button onclick="saveEntry()" class="w-full bg-blue-600 text-white p-5 rounded-2xl font-black uppercase text-sm shadow-xl mt-4">Guardar</button>
-                <button onclick="closeModal()" class="w-full text-slate-400 font-bold py-2 uppercase text-[10px]">Cancelar</button>
+                <button onclick="closeModal()" class="w-full text-slate-400 font-bold py-2 uppercase text-[10px] text-center">Cancelar</button>
             </div>
         </div>
     </div>
 
     <script>
         const APP_KEY = 'm258y65zq709vxu';
-        const FILE_NAME = '/obra_data.json'; // Em App Folder, o caminho é relativo à pasta da app
+        const FILE_NAME = '/obra_data.json'; 
         const REDIRECT_URI = window.location.origin + window.location.pathname;
         
         let dbx;
@@ -85,12 +81,9 @@
         let db = { entradas: [], despesas: [], categorias: ["Terreno", "Arquitectura", "Licenças", "Construção", "Acabamentos", "Extras"] };
         let currentView = 'dashboard';
 
-        function doLogin() { 
-            window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${APP_KEY}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`; 
-        }
+        function doLogin() { window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${APP_KEY}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`; }
 
-        const urlParams = new URLSearchParams(window.location.hash.substring(1));
-        const token = urlParams.get('access_token') || localStorage.getItem('dbx_token');
+        const token = new URLSearchParams(window.location.hash.substring(1)).get('access_token') || localStorage.getItem('dbx_token');
 
         if (token) {
             localStorage.setItem('dbx_token', token);
@@ -106,20 +99,24 @@
             try {
                 const res = await dbx.filesDownload({ path: FILE_NAME });
                 const text = await res.result.fileBlob.text();
-                db = JSON.parse(text);
-                isInitialized = true;
-                updateStatus("ONLINE", "bg-emerald-500");
-                render();
+                const data = JSON.parse(text);
+                
+                // Só carrega se o ficheiro tiver dados reais
+                if (data.entradas || data.despesas) {
+                    db = data;
+                    isInitialized = true;
+                    updateStatus("ONLINE", "bg-emerald-500");
+                    render();
+                }
             } catch (e) {
                 console.error(e);
                 if (e.status === 404 || e.status === 409) {
                     isInitialized = true;
-                    await saveToDropbox(); // Cria ficheiro inicial se não existir
+                    await saveToDropbox(); 
                     updateStatus("NOVO FICHEIRO", "bg-blue-500");
                     render();
                 } else {
-                    updateStatus("ERRO SYNC", "bg-red-500");
-                    alert("Erro: Certifica-te que o ficheiro está na pasta Aplicativos/[Nome-da-App] da tua Dropbox.");
+                    updateStatus("ERRO", "bg-red-500");
                 }
             }
         }
@@ -130,15 +127,12 @@
             try {
                 await dbx.filesUpload({ path: FILE_NAME, contents: JSON.stringify(db, null, 2), mode: 'overwrite' });
                 updateStatus("ONLINE", "bg-emerald-500");
-            } catch (err) {
-                updateStatus("ERRO GRAVAR", "bg-red-500");
-            }
+            } catch (err) { updateStatus("ERRO GRAVAR", "bg-red-500"); }
         }
 
         function updateStatus(text, colorClass) {
             document.getElementById('sync-status').innerText = text;
-            const dot = document.getElementById('status-dot');
-            dot.className = "status-dot " + colorClass;
+            document.getElementById('status-dot').className = "status-dot " + colorClass;
         }
 
         function setView(v) { currentView = v; render(); }
@@ -156,27 +150,27 @@
                 content.innerHTML = `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
                         <div class="bg-slate-900 text-white p-10 rounded-[48px] shadow-2xl">
-                            <p class="text-slate-400 text-[10px] font-black uppercase mb-2 italic">Saldo Disponível</p>
+                            <p class="text-slate-400 text-[10px] font-black uppercase mb-2">Saldo em Conta</p>
                             <h3 class="text-4xl font-black italic text-blue-400">${(totalE - totalD).toLocaleString('pt-PT', {minimumFractionDigits:2})}€</h3>
                         </div>
                         <div class="bg-white p-10 rounded-[48px] border shadow-sm">
-                            <p class="text-slate-400 text-[10px] font-black uppercase mb-2 text-right italic">Total Investido</p>
+                            <p class="text-slate-400 text-[10px] font-black uppercase mb-2 text-right">Total Investido</p>
                             <h3 class="text-4xl font-black italic text-slate-800 text-right">${totalD.toLocaleString('pt-PT', {minimumFractionDigits:2})}€</h3>
                         </div>
                     </div>
                     <div class="bg-white p-8 rounded-[40px] shadow-sm border border-slate-50">
-                        <h4 class="font-black mb-8 uppercase italic text-xs tracking-widest text-slate-400">Gastos por Categoria</h4>
+                        <h4 class="font-black mb-8 uppercase text-xs text-slate-400">Gastos por Categoria</h4>
                         <div class="space-y-4">
                             ${db.categorias.map(cat => {
                                 const v = db.despesas.filter(d => d.cat === cat).reduce((a,b) => a + b.valor, 0);
-                                return v > 0 ? `<div class="flex justify-between border-b border-slate-50 pb-2">
-                                    <span class="font-bold uppercase text-[10px] text-slate-500">${cat}</span>
-                                    <span class="font-black italic">${v.toLocaleString('pt-PT')}€</span>
+                                return v > 0 ? `<div class="flex justify-between border-b pb-2">
+                                    <span class="font-bold text-[10px] text-slate-500 uppercase">${cat}</span>
+                                    <span class="font-black">${v.toLocaleString('pt-PT')}€</span>
                                 </div>` : '';
                             }).join('')}
                         </div>
                     </div>`;
-                document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg">+ Novo</button>`;
+                document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase">+ Novo</button>`;
             } else {
                 renderList();
             }
@@ -190,46 +184,37 @@
                 <div class="max-w-3xl mx-auto space-y-3">
                     ${sorted.map(m => `
                         <div class="bg-white p-5 rounded-3xl border border-slate-50 flex justify-between items-center shadow-sm">
-                            <div>
-                                <p class="font-black uppercase text-sm italic">${m.desc}</p>
-                                <p class="text-[9px] font-bold text-slate-400 uppercase">${m.data} ${m.cat ? '• '+m.cat : ''}</p>
-                            </div>
+                            <div><p class="font-black uppercase text-sm italic">${m.desc}</p><p class="text-[9px] font-bold text-slate-400 uppercase">${m.data}</p></div>
                             <div class="flex items-center gap-6">
                                 <p class="font-black italic text-lg ${currentView==='entradas'?'text-emerald-600':'text-slate-800'}">${m.valor.toLocaleString('pt-PT')}€</p>
                                 <button onclick="deleteEntry('${m.id}')" class="text-slate-200 hover:text-red-500"><i data-lucide="trash-2" size="18"></i></button>
                             </div>
                         </div>`).join('')}
                 </div>`;
-            document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg">+ Novo</button>`;
+            document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase shadow-lg">+ Novo</button>`;
         }
 
         function openModal() {
             document.getElementById('modal-entry').style.display = 'flex';
             document.getElementById('form-cat').innerHTML = db.categorias.map(c => `<option value="${c}">${c}</option>`).join('');
             document.getElementById('form-date').valueAsDate = new Date();
-            document.getElementById('form-value').value = '';
-            document.getElementById('form-desc').value = '';
         }
         function closeModal() { document.getElementById('modal-entry').style.display = 'none'; }
 
         async function saveEntry() {
             const val = parseFloat(document.getElementById('form-value').value), desc = document.getElementById('form-desc').value, date = document.getElementById('form-date').value;
-            if(!val || !desc) return alert("Preencha todos os campos!");
-            
+            if(!val || !desc) return alert("Preencha os campos!");
             const entry = { id: Date.now().toString(), data: date, valor: val, desc: desc };
-            if(currentView === 'entradas') db.entradas.push(entry); 
-            else { entry.cat = document.getElementById('form-cat').value; db.despesas.push(entry); }
-            
+            if(currentView === 'entradas') db.entradas.push(entry); else { entry.cat = document.getElementById('form-cat').value; db.despesas.push(entry); }
             closeModal(); await saveToDropbox(); render();
         }
 
         async function deleteEntry(id) {
-            if(!confirm("Eliminar registo?")) return;
+            if(!confirm("Eliminar?")) return;
             db.entradas = db.entradas.filter(e => e.id !== id);
             db.despesas = db.despesas.filter(d => d.id !== id);
             await saveToDropbox(); render();
         }
-
         lucide.createIcons();
     </script>
 </body>
