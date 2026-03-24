@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Obra Pro V22.1 - Edição Final</title>
+    <title>Obra Pro V22.2 - Navegação Direta</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
@@ -184,7 +184,6 @@
             } catch (err) { updateStatus("ERRO GRAVAR", "bg-red-500"); }
         }
 
-        // --- GESTÃO DE FICHEIROS COM FIX PARA IPHONE ---
         function updateFileStatus() {
             const file = document.getElementById('form-file').files[0];
             if (file) {
@@ -207,28 +206,20 @@
             }
         }
 
+        // --- SOLUÇÃO ALTERNATIVA: NAVEGAÇÃO DIRETA NA MESMA ABA ---
         async function openFatura(path) {
             updateStatus("A ABRIR...", "bg-blue-500");
             try {
                 const res = await dbx.filesGetTemporaryLink({ path: path });
-                const link = res.result.link;
-
-                // FIX PARA IPHONE: Criar link e simular clique real no DOM
-                const a = document.createElement('a');
-                a.href = link;
-                a.target = '_blank';
-                a.rel = 'noopener noreferrer';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-
-                updateStatus("ONLINE", "bg-emerald-500");
+                // Ao usar window.location.href, o navegador sai da app e abre o ficheiro.
+                // Para voltar, basta clicar no botão "Retroceder" do navegador.
+                window.location.href = res.result.link;
             } catch (e) { 
-                alert("Erro ao abrir: Verifique se o Safari permite Pop-ups."); 
+                alert("Erro ao obter o ficheiro da Dropbox."); 
                 updateStatus("ONLINE", "bg-emerald-500");
             }
         }
-        // ---------------------------
+        // ---------------------------------------------------------
 
         function updateStatus(text, colorClass) {
             document.getElementById('sync-status').innerText = text;
