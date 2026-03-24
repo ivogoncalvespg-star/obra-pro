@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Obra Pro V22 - Gestão com Faturas</title>
+    <title>Obra Pro V22.1 - Edição Final</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
@@ -28,7 +28,7 @@
         <div class="text-center text-white">
             <div class="bg-blue-600 p-4 rounded-3xl inline-block mb-6 shadow-2xl"><i data-lucide="wrench" size="48"></i></div>
             <h2 class="text-4xl font-black mb-10 italic tracking-tighter uppercase">Obra Pro</h2>
-            <button onclick="doLogin()" class="w-full bg-white text-slate-900 py-5 rounded-2xl font-black uppercase text-sm">Ligar à Dropbox</button>
+            <button onclick="doLogin()" class="w-full bg-white text-slate-900 py-5 rounded-2xl font-black uppercase text-sm shadow-xl">Ligar à Dropbox</button>
         </div>
     </div>
 
@@ -124,7 +124,7 @@
     </div>
 
     <script>
-        const APP_KEY = 'm258y65zq709vxu'; // Mantenha a sua App Key
+        const APP_KEY = 'm258y65zq709vxu'; 
         const FILE_NAME = '/obra_data.json'; 
         const REDIRECT_URI = window.location.origin + window.location.pathname;
         
@@ -184,7 +184,7 @@
             } catch (err) { updateStatus("ERRO GRAVAR", "bg-red-500"); }
         }
 
-        // --- GESTÃO DE FICHEIROS ---
+        // --- GESTÃO DE FICHEIROS COM FIX PARA IPHONE ---
         function updateFileStatus() {
             const file = document.getElementById('form-file').files[0];
             if (file) {
@@ -211,9 +211,22 @@
             updateStatus("A ABRIR...", "bg-blue-500");
             try {
                 const res = await dbx.filesGetTemporaryLink({ path: path });
-                window.open(res.result.link, '_blank');
+                const link = res.result.link;
+
+                // FIX PARA IPHONE: Criar link e simular clique real no DOM
+                const a = document.createElement('a');
+                a.href = link;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
                 updateStatus("ONLINE", "bg-emerald-500");
-            } catch (e) { alert("Não foi possível abrir a fatura."); }
+            } catch (e) { 
+                alert("Erro ao abrir: Verifique se o Safari permite Pop-ups."); 
+                updateStatus("ONLINE", "bg-emerald-500");
+            }
         }
         // ---------------------------
 
@@ -260,7 +273,7 @@
                             <div class="flex flex-col items-center gap-6">${renderPieChart()}<div class="w-full text-left space-y-2">${renderCategoryLegend()}</div></div>
                         </div>
                     </div>`;
-                document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase">+ Novo</button>`;
+                document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase shadow-lg">+ Novo</button>`;
             } 
             else if (currentView === 'review') renderReviewView();
             else renderHistoryList();
@@ -311,7 +324,7 @@
                             </div>
                         </div>`).join('')}
                 </div>`;
-            document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase">+ Novo</button>`;
+            document.getElementById('header-actions').innerHTML = `<button onclick="openModal()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase shadow-lg">+ Novo</button>`;
         }
 
         function renderReviewView() {
@@ -400,13 +413,13 @@
 
             if(!val || !desc) return alert("Preencha Valor e Descrição!");
 
-            document.getElementById('btn-save').disabled = true;
-            document.getElementById('btn-save').innerText = "A PROCESSAR...";
+            const btnSave = document.getElementById('btn-save');
+            btnSave.disabled = true;
+            btnSave.innerText = "A PROCESSAR...";
 
             const entryId = editId || Date.now().toString();
             let entry = { id: entryId, data: date, valor: val, desc: desc };
 
-            // Tratar Fatura
             if (fileInput.files.length > 0) {
                 const filePath = await uploadFatura(fileInput.files[0], entryId);
                 if(filePath) entry.fatura = filePath;
@@ -418,8 +431,8 @@
             if(tempType === 'despesa') {
                 const split = { A: parseFloat(document.getElementById('split-A').value || 0), B: parseFloat(document.getElementById('split-B').value || 0), EXT: parseFloat(document.getElementById('split-EXT').value || 0) };
                 if(Math.abs((split.A + split.B + split.EXT) - val) > 0.01) {
-                    document.getElementById('btn-save').disabled = false;
-                    document.getElementById('btn-save').innerText = "Guardar e Sincronizar";
+                    btnSave.disabled = false;
+                    btnSave.innerText = "Guardar e Sincronizar";
                     return alert("A soma das frações não bate certo!");
                 }
                 entry.cat = document.getElementById('form-cat').value;
@@ -432,8 +445,8 @@
 
             closeModal(); 
             await saveToDropbox(); 
-            document.getElementById('btn-save').disabled = false;
-            document.getElementById('btn-save').innerText = "Guardar e Sincronizar";
+            btnSave.disabled = false;
+            btnSave.innerText = "Guardar e Sincronizar";
             render();
         }
 
